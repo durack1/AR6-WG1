@@ -1,0 +1,85 @@
+! Created on Mon Nov 25 16:45:43 2019
+! @author: durack1
+! To execute:
+! ferret -png -nojnl -script basinmask4.jnl
+! Add data to path
+! (pyferret750) bash-4.2$ export FER_DATA=/export/durack1/bin/downloads/ferret7.3/180204_build/ferret_datasets/data
+! /work/durack1/Shared/190311_AR6/Chap3/basinmask4.jnl
+
+! Clean up target dir
+SPAWN "/bin/rm -rf basinmask/CMIP6/ocean/png/*.png"
+SPAWN "/bin/mkdir basinmask/CMIP6/ocean/png"
+SPAWN "/bin/rm -rf basinmask/CMIP6/atmos/png/*.png"
+SPAWN "/bin/mkdir basinmask/CMIP6/atmos/png"
+SPAWN "/bin/rm -rf basinmask/CMIP5/ocean/png/*.png"
+SPAWN "/bin/mkdir basinmask/CMIP5/ocean/png"
+SPAWN "/bin/rm -rf basinmask/CMIP5/atmos/png/*.png"
+SPAWN "/bin/mkdir basinmask/CMIP5/atmos/png"
+
+! Do CMIP6 ocn
+let filenames = SPAWN("/bin/ls -1 basinmask/CMIP6/ocean/*.nc") ! List of filenames
+let numfiles = `filenames,return=iend` ! Number of files
+repeat/range=1:`numfiles`/name=in (let filename = filenames[i=`in`] ; \ ! Loop over filenames
+say `filename` ; \ ! print filename to screen
+def sym filen `filename` ; \ ! Create filen variable
+let filepng = {spawn:"echo ($filen) | sed s:.nc:.png:"} ; \ ! Rename nc to png
+let filepng = {spawn:"echo `filepng` | sed s:basinmask/CMIP6/ocean:basinmask/CMIP6/ocean/png:"} ; \ ! Rewrite to png subdir
+say `filepng` ; \ ! print pngname to screen
+use ($filen) ; \ ! Load filen
+can win/all ; \ ! Cancel all active windows
+set win 1 ; \ ! Set new target window
+sha/levels=(1)(1,5,1)(5) basinmask4 ; \ ! Shade basinmask4 variable
+go land ; \ ! Overlay continental outline
+frame/file="`filepng`" ; \ ! Save plot to png
+can win 1) ! Cancel active window
+
+! Do CMIP6 atm
+let filenames = SPAWN("/bin/ls -1 basinmask/CMIP6/atmos/*.nc") ! List of filenames
+let numfiles = `filenames,return=iend` ! Number of files
+repeat/range=1:`numfiles`/name=in (let filename = filenames[i=`in`] ; \ ! Loop over filenames
+say `filename` ; \ ! print filename to screen
+def sym filen `filename` ; \ ! Create filen variable
+let filepng = {spawn:"echo ($filen) | sed s:.nc:.png:"} ; \ ! Rename nc to png
+let filepng = {spawn:"echo `filepng` | sed s:basinmask/CMIP6/atmos:basinmask/CMIP6/atmos/png:"} ; \ ! Rewrite to png subdir
+say `filepng` ; \ ! print pngname to screen
+use ($filen) ; \ ! Load filen
+can win/all ; \ ! Cancel all active windows
+set win 1 ; \ ! Set new target window
+sha/levels=(1)(1,5,1)(5) basinmask4 ; \ ! Shade basinmask4 variable
+go land ; \ ! Overlay continental outline
+frame/file="`filepng`" ; \ ! Save plot to png
+can win 1) ! Cancel active window
+
+! Do CMIP5 ocn
+let filenames = SPAWN("/bin/ls -1 basinmask/CMIP5/ocean/*.nc") ! List of filenames
+let numfiles = `filenames,return=iend` ! Number of files
+repeat/range=1:`numfiles`/name=in (let filename = filenames[i=`in`] ; \ ! Loop over filenames
+say `filename` ; \ ! print filename to screen
+def sym filen `filename` ; \ ! Create filen variable
+let filepng = {spawn:"echo ($filen) | sed s:.nc:.png:"} ; \ ! Rename nc to png
+let filepng = {spawn:"echo `filepng` | sed s:basinmask/CMIP5/ocean:basinmask/CMIP5/ocean/png:"} ; \ ! Rewrite to png subdir
+say `filepng` ; \ ! print pngname to screen
+use ($filen) ; \ ! Load filen
+can win/all ; \ ! Cancel all active windows
+set win 1 ; \ ! Set new target window
+sha/levels=(1)(1,5,1)(5) basinmask4 ; \ ! Shade basinmask4 variable
+go land ; \ ! Overlay continental outline
+frame/file="`filepng`" ; \ ! Save plot to png
+can win 1) ! Cancel active window
+
+! Do CMIP5 atm
+let filenames = SPAWN("/bin/ls -1 basinmask/CMIP5/atmos/*.nc") ! List of filenames
+let numfiles = `filenames,return=iend` ! Number of files
+repeat/range=1:`numfiles`/name=in (let filename = filenames[i=`in`] ; \ ! Loop over filenames
+say `filename` ; \ ! print filename to screen
+def sym filen `filename` ; \ ! Create filen variable
+let filepng = {spawn:"echo ($filen) | sed s:.nc:.png:"} ; \ ! Rename nc to png
+let filepng = {spawn:"echo `filepng` | sed s:basinmask/CMIP5/atmos:basinmask/CMIP5/atmos/png:"} ; \ ! Rewrite to png subdir
+say `filepng` ; \ ! print pngname to screen
+use ($filen) ; \ ! Load filen
+can win/all ; \ ! Cancel all active windows
+set win 1 ; \ ! Set new target window
+sha/levels=(1)(1,5,1)(5) basinmask4 ; \ ! Shade basinmask4 variable
+go land ; \ ! Overlay continental outline
+frame/file="`filepng`" ; \ ! Save plot to png
+can win 1) ! Cancel active window
