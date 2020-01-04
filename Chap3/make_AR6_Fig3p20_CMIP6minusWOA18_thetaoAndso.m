@@ -10,7 +10,7 @@
 % PJD 29 Dec 2019   - Added getGitInfo for export_fig hash
 % PJD  2 Jan 2020   - Updated to qc and process first files
 % PJD  3 Jan 2020   - Added thetao exclusion list
-% PJD  3 Jan 2020   - Added fix for lon offset in input files
+% PJD  3 Jan 2020   - Added fix for lon offset in input files (both plots and reads)
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
 
@@ -410,12 +410,14 @@ for x = 1:(length(models)-1)
         % Process final fields - if different
         infile = models{x};
         unit_test = getnc(infile,'thetao_mean_WOAGrid');
+        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
         if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
         thetao(count,:,:,:) = unit_test;
         thetao_model_names{count} = model1;
         count = count + 1;
         infile = models{x+1};
         unit_test = getnc(infile,'thetao_mean_WOAGrid');
+        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
         if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
         thetao(count,:,:,:) = unit_test;
         thetao_model_names{count} = model2;
@@ -423,11 +425,13 @@ for x = 1:(length(models)-1)
         % Process final fields - if same
         infile = models{x};
         unit_test = getnc(infile,'thetao_mean_WOAGrid');
+        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
         if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
         ensemble(ens_count,:,:,:) = unit_test;
         ens_count = ens_count + 1;
         infile = models{x+1};
         unit_test = getnc(infile,'thetao_mean_WOAGrid');
+        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
         if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
         ensemble(ens_count,:,:,:) = unit_test;
         % Write to matrix
@@ -446,6 +450,7 @@ for x = 1:(length(models)-1)
         else
             infile = models{x};
             unit_test = getnc(infile,'thetao_mean_WOAGrid');
+            unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
             if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
             thetao(count,:,:,:) = unit_test;
             thetao_model_names{count} = model1;
@@ -456,6 +461,7 @@ for x = 1:(length(models)-1)
         % If models are the same
         infile = models{x};
         unit_test = getnc(infile,'thetao_mean_WOAGrid');
+        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
         if min(unit_test(:)) > 250; unit_test = unit_test-273.15; end
         ensemble(ens_count,:,:,:) = unit_test;
         ens_count = ens_count + 1;
@@ -467,6 +473,7 @@ thetao_model_names((count+1):end) = [];
 clear count ens_count ensemble in_path infile model* unit_test x
 
 % Cludgey fix for bad data
+%{
 thetao(thetao < -3) = NaN;
 thetao(thetao > 35) = NaN;
 for x = 18:31
@@ -493,6 +500,7 @@ for x = 18:31
     level(index) = NaN;
     thetao(:,x,:,:) = level;
 end
+%}
 
 % Mask marginal seas
 for mod = 1:size(thetao,1)
