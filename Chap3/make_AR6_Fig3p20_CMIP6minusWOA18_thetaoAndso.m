@@ -8,6 +8,9 @@
 % PJD 29 Dec 2019   - Renamed from ../120711_AR5/Chap09/make_AR5_Fig9p13_CMIP5minusWOA09_thetaoAndso.m and updated input
 % PJD 29 Dec 2019   - Updated from WOA09 to WOD/A18 obs data
 % PJD 29 Dec 2019   - Added getGitInfo for export_fig hash
+% PJD  2 Jan 2020   - Updated to qc and process first files
+% PJD  3 Jan 2020   - Added thetao exclusion list
+% PJD  3 Jan 2020   - Added fix for lon offset in input files
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
 
@@ -16,9 +19,8 @@
 clear, clc, close all
 % Initialise environment variables
 [homeDir,~,dataDir,obsDir,~,aHostLongname] = myMatEnv(2);
-%filedates = '130522'; % Date when files were created
 outDir = os_path([homeDir,'190311_AR6/Chap3/']);
-%outData = os_path([outDir,'ncs/',filedates,'/']);
+outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
 
 % Setup plotting scales
 ptcont1 = -2.5:2.5:30;
@@ -161,17 +163,77 @@ disp('** WOA18 processing complete.. **')
 
 
 %% Do model temperature
-in_path = os_path([outData,'thetao/']);
-if isunix
-    [~, models] = unix(['\ls -1 ',in_path,'*WOAGrid.nc']);
-else
-    [~, models] = dos(['dir ',in_path,'*WOAGrid.nc /B']);
-end
+inVar = '*thetao';
+[~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
 models = strtrim(models);
 temp = regexp(models,'\n','split'); clear models status
 models = unique(temp); clear temp
 
 % Trim model list for duplicates - Use plots to guide trimming
+bad_list = {
+    'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190822' ; % rotated pole
+    'CNRM-CERFACS.CNRM-CM6-1-HR.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20191021' ; % mask
+    'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.thetao.ocean.glb-l-gr.v20190826' ; % mask/missing_value?
+    'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.thetao.ocean.glb-l-gr.v20190830' ; % zeros
+    'E3SM-Project.E3SM-1-0.r3i1p1f1.mon.thetao.ocean.glb-l-gr.v20190827'
+    'E3SM-Project.E3SM-1-0.r4i1p1f1.mon.thetao.ocean.glb-l-gr.v20190909'
+    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.thetao.ocean.glb-l-gr.v20191009'
+    'IPSL.IPSL-CM6A-LR.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803' ; % zeros
+    'IPSL.IPSL-CM6A-LR.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r12i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r13i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r14i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r15i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r16i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r17i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r18i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r19i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r20i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r21i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r22i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r23i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r24i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r25i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r26i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r27i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r28i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r29i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r30i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r31i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r32i1p1f1.mon.thetao.ocean.glb-l-gn.v20190802'
+    'IPSL.IPSL-CM6A-LR.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'IPSL.IPSL-CM6A-LR.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
+    'MIROC.MIROC-ES2L.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823' ; % zeros
+    'MIROC.MIROC-ES2L.r2i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
+    'MIROC.MIROC-ES2L.r3i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
+    'MRI.MRI-ESM2-0.r1i2p1f1.mon.thetao.ocean.glb-l-gn.v20191108' ; % zeros
+    'NCAR.CESM2.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20190313' ; % zeros
+    'NCAR.CESM2.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20190514'
+    'NCAR.CESM2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311' ; % depth coord?
+    'NCAR.CESM2.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
+    'NCAR.CESM2.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
+    'NCAR.CESM2-WACCM.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808' ; % zeros
+    'NCAR.CESM2-WACCM.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
+    'NCAR.CESM2-WACCM.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
+    'NOAA-GFDL.GFDL-CM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180701' ; % land mask/low values
+    'NOAA-GFDL.GFDL-ESM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190726' ; % land mask/low values
+};
+
+%CMIP5
+%{
 bad_list = {
 '/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r10i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
 '/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
@@ -254,16 +316,22 @@ bad_list2 = {
 '/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.thetao.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
 '/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
 };
+%}
 
-% Truncate using dupe list 
+% Truncate using dupe list
 ind = NaN(40,1); y = 1;
 for x = 1:length(models)
     splits = strfind(models{x},'/');
-    match = strfind(bad_list,models{x}(splits(end)+1:end));
+    mod = models{x}(splits(end)+1:end);
+    separators = strfind(mod,'.');
+    mod = mod(separators(3)+1:separators(11)-1);
+    %disp(['mod:',mod])
+    match = strfind(bad_list,mod);
     match = find(~cellfun(@isempty,match), 1);
     if ~isempty(match)
         ind(y) = x;
         y = y + 1;
+        disp(['drop: ',mod])
     end
 end
 % Truncate using ind list
@@ -280,14 +348,17 @@ ensemble = NaN(50,length(t_depth),length(t_lat),length(t_lon));
 for x = 1:(length(models)-1)
     % Test for multiple realisations and generate ensemble mean
     model_ind = strfind(models{x},'.'); temp = models{x};
-    model1 = temp((model_ind(1)+1):(model_ind(2)-1)); clear temp
+    %model1 = temp((model_ind(1)+1):(model_ind(2)-1)); clear temp
+    model1 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
     model_ind = strfind(models{x+1},'.'); temp = models{x+1};
-    model2 = temp((model_ind(1)+1):(model_ind(2)-1)); clear temp
+    model2 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
 
     % Plot model fields for bug-tracking - 2D and global zonal mean
     tmp1 = getnc(models{x},'thetao_mean_WOAGrid'); temp = models{x};
+    tmp1 = tmp1(:,:,[181:360,1:180]); % Correct lon offset issue
     ind = strfind(temp,'/'); tmp1name = regexprep(temp((ind(end)+1):end),'.nc','');
     tmp2 = getnc(models{x+1},'thetao_mean_WOAGrid'); temp = models{x+1};
+    tmp2 = tmp2(:,:,[181:360,1:180]); % Correct lon offset issue
     ind = strfind(temp,'/'); tmp2name = regexprep(temp((ind(end)+1):end),'.nc','');
     % Plot model 1
     close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
@@ -308,7 +379,7 @@ for x = 1:(length(models)-1)
     set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
     'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
     'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'thetao/figs/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
+    export_fig([outData,'thetao/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
     close all
     clear handle ax1 ax2 hh1 tmp1 ind tmp1name
     
@@ -331,7 +402,7 @@ for x = 1:(length(models)-1)
     set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
     'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
     'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'thetao/figs/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
+    export_fig([outData,'thetao/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
     close all
     clear handle ax1 ax2 hh1 tmp2 tmp2name
     
@@ -452,10 +523,11 @@ set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
 set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
     'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
     'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
-export_fig([outDir,datestr(now,'yymmdd'),'_CMIP5_thetao_mean'],'-png')
+export_fig([outDir,datestr(now,'yymmdd'),'_CMIP6_thetao_mean'],'-png')
 
 % Calculate zonal means
 thetao_mean_zonal = squeeze(nanmean(thetao_mean,3)); % Generate zonal mean
+disp('thetao done..')
 
 %% Do model salinity
 in_path = os_path([outData,'so/']);
