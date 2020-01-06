@@ -17,7 +17,9 @@
 % PJD  4 Jan 2020   - Updated colorbar call with clim update - has changed since R2011b
 % PJD  4 Jan 2020   - Finalised global mean, next stop CMIP5 and basins
 % PJD  5 Jan 2020   - Updated all badLists for 5/6
-%                   - TODO: next update to also plot CMIP5
+% PJD  5 Jan 2020   - Updated for dynamic generation of CMIP5/6
+% PJD  5 Jan 2020   - Finalized CMIP6/5 global plots
+%                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
 
@@ -27,7 +29,6 @@ clear, clc, close all
 % Initialise environment variables
 [homeDir,~,dataDir,obsDir,~,aHostLongname] = myMatEnv(2);
 outDir = os_path([homeDir,'190311_AR6/Chap3/']);
-outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
 
 % Setup plotting scales
 ptcont1 = -2.5:2.5:30;
@@ -53,12 +54,13 @@ else % If batch job purge files
     purge = 1;
 end
 if purge
-    delete([outDir,datestr(now,'yymmdd'),'*_CMIP6*.eps']);
-    delete([outDir,datestr(now,'yymmdd'),'_WOA09*.png']);
-    delete([outDir,datestr(now,'yymmdd'),'_CMIP6*.png']);
-    delete([outDir,datestr(now,'yymmdd'),'_CMIP6*.mat']);
-    delete([outData,'so/figs/',datestr(now,'yymmdd'),'*.png']);
-    delete([outData,'thetao/figs/',datestr(now,'yymmdd'),'*.png']);
+    delete([outDir,datestr(now,'yymmdd'),'*_cmip*.eps']);
+    delete([outDir,datestr(now,'yymmdd'),'*_cmip*.png']);
+    delete([outDir,datestr(now,'yymmdd'),'_WOA18*.png']);
+    delete([outDir,datestr(now,'yymmdd'),'_cmip*.png']);
+    delete([outDir,datestr(now,'yymmdd'),'_CMIP5*.mat']);
+    delete([outDir,'ncs/CMIP*/historical/woaGrid/so/',datestr(now,'yymmdd'),'*.png']);
+    delete([outDir,'ncs/CMIP*/historical/woaGrid/thetao/',datestr(now,'yymmdd'),'*.png']);
 end
 
 %% Print time to console, for logging
@@ -70,7 +72,7 @@ a = getGitInfo('/export/durack1/git/export_fig/') ;
 disp([upper('export_fig hash: '),a.hash])
 a = getGitInfo('/export/durack1/git/AR6-WG1/') ;
 disp([upper('AR6-WG1 hash: '),a.hash])
-disp('')
+clear a
 
 %% Load WOA18 data
 woaDir = os_path([obsDir,'WOD18/190312/']);
@@ -353,7 +355,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM5Thetao;
             outData = os_path([outDir,'ncs/CMIP5/historical/woaGrid/']);
-            mipEra = 'CMIP5';
+            mipEra = 'cmip5';
             cont1 = ptcont1;
             cont2 = ptcont2;
             cont3 = ptcont3;
@@ -363,17 +365,17 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM5So;
             outData = os_path([outDir,'ncs/CMIP5/historical/woaGrid/']);
-            mipEra = 'CMIP5';
+            mipEra = 'cmip5';
             cont1 = scont1;
             cont2 = scont2;
-            cont3 = scont3;            
+            cont3 = scont3;
         case 3 % CMIP6 thetao
             inVar = '*thetao';
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM6Thetao;
             outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
-            mipEra = 'CMIP6';
+            mipEra = 'cmip6';
             cont1 = ptcont1;
             cont2 = ptcont2;
             cont3 = ptcont3;
@@ -383,18 +385,18 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM6So;
             outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
-            mipEra = 'CMIP6';
+            mipEra = 'cmip6';
             cont1 = scont1;
             cont2 = scont2;
-            cont3 = scont3;            
+            cont3 = scont3;
     end
-    
+
     % Now process
     [~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
     models = strtrim(models);
     temp = regexp(models,'\n','split'); clear models status
     models = unique(temp); clear temp
-    
+
     % Truncate using dupe list
     ind = NaN(50,1); y = 1;
     for x = 1:length(models)
@@ -437,6 +439,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         tmp2 = getnc(models{x+1},ncVar); temp = models{x+1};
         tmp2 = tmp2(:,:,[181:360,1:180]); % Correct lon offset issue
         ind = strfind(temp,'/'); tmp2name = regexprep(temp((ind(end)+1):end),'.nc','');
+        clear temp
         % Plot model 1
         close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
         ax1 = subplot(1,2,1);
@@ -455,7 +458,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
         set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
         'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-        'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
+        'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
         export_fig([outData,'/',inVarName,'/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
         close all
         clear handle ax1 ax2 hh1 tmp1 ind tmp1name
@@ -478,7 +481,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
         set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
         'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-        'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
+        'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
         export_fig([outData,'/',inVarName,'/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
         close all
         clear handle ax1 ax2 hh1 tmp2 tmp2name
@@ -609,878 +612,151 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
         'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
     export_fig([outDir,datestr(now,'yymmdd'),'_',mipEra,'_',inVarName,'_mean'],'-png')
-
+    clear handle ax1 ax2 hh1 cont1 cont2 cont3 inVar ncVar badList
     % Calculate zonal means
     eval([inVarName,'_',mipEra,' = varTmp;']);
     eval([inVarName,'_',mipEra,'_mean = varTmp_mean;']);
     eval([inVarName,'_',mipEra,'_mean_zonal = squeeze(nanmean(varTmp_mean,3));']); % Generate zonal mean
-    clear varTmp varTmp_mean
+    eval([inVarName,'_',mipEra,'_modelNames = varTmp_model_names;']); % Generate model name lookup
+    clear varTmp varTmp_mean varTmp_model_names
     %varTmp_mean_zonal = squeeze(nanmean(varTmp_mean,3)); % Generate zonal mean
     disp([mipEra,' ',inVarName,' done..'])
+    clear mipEra mipVar inVarName
 end
-
-%Old code temp and salt
-%{
-%% Do model temperature
-inVar = '*thetao';
-[~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
-models = strtrim(models);
-temp = regexp(models,'\n','split'); clear models status
-models = unique(temp); clear temp
-
-% Trim model list for duplicates - Use plots to guide trimming
-bad_list = {
-    'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190822' ; % rotated pole
-    'CNRM-CERFACS.CNRM-CM6-1-HR.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20191021' ; % mask
-    'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.thetao.ocean.glb-l-gr.v20190826' ; % mask/missing_value?
-    'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.thetao.ocean.glb-l-gr.v20190830' ; % zeros
-    'E3SM-Project.E3SM-1-0.r3i1p1f1.mon.thetao.ocean.glb-l-gr.v20190827'
-    'E3SM-Project.E3SM-1-0.r4i1p1f1.mon.thetao.ocean.glb-l-gr.v20190909'
-    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.thetao.ocean.glb-l-gr.v20191009'
-    'IPSL.IPSL-CM6A-LR.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803' ; % zeros
-    'IPSL.IPSL-CM6A-LR.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r12i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r13i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r14i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r15i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r16i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r17i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r18i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r19i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r20i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r21i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r22i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r23i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r24i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r25i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r26i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r27i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r28i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r29i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r30i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r31i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r32i1p1f1.mon.thetao.ocean.glb-l-gn.v20190802'
-    'IPSL.IPSL-CM6A-LR.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'MIROC.MIROC-ES2L.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823' ; % zeros
-    'MIROC.MIROC-ES2L.r2i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
-    'MIROC.MIROC-ES2L.r3i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
-    'MRI.MRI-ESM2-0.r1i2p1f1.mon.thetao.ocean.glb-l-gn.v20191108' ; % zeros
-    'NCAR.CESM2.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20190313' ; % zeros
-    'NCAR.CESM2.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20190514'
-    'NCAR.CESM2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311' ; % depth coord?
-    'NCAR.CESM2.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2-WACCM.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808' ; % zeros
-    'NCAR.CESM2-WACCM.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
-    'NCAR.CESM2-WACCM.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
-    'NOAA-GFDL.GFDL-CM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180701' ; % land mask/low values
-    'NOAA-GFDL.GFDL-ESM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190726' ; % land mask/low values
-};
-
-%CMIP5
-%{
-bad_list = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r10i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r2i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r3i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r5i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r6i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.EC-EARTH.historical.r9i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.thetao.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.thetao.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC4h.historical.r1i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC4h.historical.r2i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC4h.historical.r3i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r1i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r2i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r3i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r4i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r4i1p1.an.ocn.thetao.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/thetao/cmip5.MIROC5.historical.r5i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-};
-
-bad_list_130322 = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r10i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.thetao.ver-v20120516.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.thetao.ver-v20120516.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r2i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r3i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r5i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r6i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.thetao.ver-v20120515.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.EC-EARTH.historical.r9i1p1.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.thetao.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.thetao.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.thetao.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC4h.historical.r1i1p1.an.ocn.thetao.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC4h.historical.r2i1p1.an.ocn.thetao.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC4h.historical.r3i1p1.an.ocn.thetao.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r1i1p1.an.ocn.thetao.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r2i1p1.an.ocn.thetao.ver-v20111202.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r3i1p1.an.ocn.thetao.ver-v20111202.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r4i1p1.an.ocn.thetao.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r4i1p1.an.ocn.thetao.ver-v20121221.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.MIROC5.historical.r5i1p1.an.ocn.thetao.ver-v20120608.1975-2005_anClim_WOAGrid.nc'
-};
-
-bad_list2 = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.thetao.ver-v20120206.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.thetao.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.thetao.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.thetao.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.thetao.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.thetao.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/thetao/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.thetao.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-};
-%}
-
-% Truncate using dupe list
-ind = NaN(40,1); y = 1;
-for x = 1:length(models)
-    splits = strfind(models{x},'/');
-    mod = models{x}(splits(end)+1:end);
-    separators = strfind(mod,'.');
-    mod = mod(separators(3)+1:separators(11)-1);
-    %disp(['mod:',mod])
-    match = strfind(bad_list,mod);
-    match = find(~cellfun(@isempty,match), 1);
-    if ~isempty(match)
-        ind(y) = x;
-        y = y + 1;
-        disp(['drop: ',mod])
-    end
-end
-% Truncate using ind list
-ind = ind(~isnan(ind));
-ind = ismember(1:length(models),ind); % Logic is create index of files in bad_list
-models(ind) = [];
-clear bad_list ind match splits x y
-
-% Build matrix of model results
-thetao = NaN(length(models),length(t_depth),length(t_lat),length(t_lon));
-thetao_model_names = cell(length(models),1);
-count = 1; ens_count = 1;
-ensemble = NaN(50,length(t_depth),length(t_lat),length(t_lon));
-for x = 1:(length(models)-1)
-    % Test for multiple realisations and generate ensemble mean
-    model_ind = strfind(models{x},'.'); temp = models{x};
-    %model1 = temp((model_ind(1)+1):(model_ind(2)-1)); clear temp
-    model1 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
-    model_ind = strfind(models{x+1},'.'); temp = models{x+1};
-    model2 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
-
-    % Plot model fields for bug-tracking - 2D and global zonal mean
-    tmp1 = getnc(models{x},'thetao_mean_WOAGrid'); temp = models{x};
-    tmp1 = tmp1(:,:,[181:360,1:180]); % Correct lon offset issue
-    ind = strfind(temp,'/'); tmp1name = regexprep(temp((ind(end)+1):end),'.nc','');
-    tmp2 = getnc(models{x+1},'thetao_mean_WOAGrid'); temp = models{x+1};
-    tmp2 = tmp2(:,:,[181:360,1:180]); % Correct lon offset issue
-    ind = strfind(temp,'/'); tmp2name = regexprep(temp((ind(end)+1):end),'.nc','');
-    % Plot model 1
-    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-    ax1 = subplot(1,2,1);
-    pcolor(t_lon,t_lat,squeeze(tmp1(1,:,:))); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); hold all
-    contour(t_lon,t_lat,squeeze(tmp1(1,:,:)),ptcont1,'color','k');
-    ax2 = subplot(1,2,2);
-    pcolor(t_lat,t_depth,nanmean(tmp1,3)); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); axis ij; hold all
-    contour(t_lat,t_depth,nanmean(tmp1,3),ptcont1,'color','k');
-    hh1 = colorbarf_nw('horiz',ptcont3,ptcont2);
-    set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-    set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-    set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-    set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-    set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-    set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'thetao/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
-    close all
-    clear handle ax1 ax2 hh1 tmp1 ind tmp1name
-    
-    % Plot model 2
-    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-    ax1 = subplot(1,2,1);
-    pcolor(t_lon,t_lat,squeeze(tmp2(1,:,:))); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); hold all
-    contour(t_lon,t_lat,squeeze(tmp2(1,:,:)),ptcont1,'color','k');
-    ax2 = subplot(1,2,2);
-    pcolor(t_lat,t_depth,nanmean(tmp2,3)); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); axis ij; hold all
-    contour(t_lat,t_depth,nanmean(tmp2,3),ptcont1,'color','k');
-    hh1 = colorbarf_nw('horiz',ptcont3,ptcont2);
-    set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-    set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-    set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-    set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-    set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-    set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'thetao/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
-    close all
-    clear handle ax1 ax2 hh1 tmp2 tmp2name
-    
-    if x == (length(models)-1) && ~strcmp(model1,model2)
-        % Process final fields - if different
-        infile = models{x};
-        unit_test = getnc(infile,'thetao_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
-        thetao(count,:,:,:) = unit_test;
-        thetao_model_names{count} = model1;
-        count = count + 1;
-        infile = models{x+1};
-        unit_test = getnc(infile,'thetao_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
-        thetao(count,:,:,:) = unit_test;
-        thetao_model_names{count} = model2;
-    elseif x == (length(models)-1) && strcmp(model1,model2)
-        % Process final fields - if same
-        infile = models{x};
-        unit_test = getnc(infile,'thetao_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
-        ensemble(ens_count,:,:,:) = unit_test;
-        ens_count = ens_count + 1;
-        infile = models{x+1};
-        unit_test = getnc(infile,'thetao_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
-        ensemble(ens_count,:,:,:) = unit_test;
-        % Write to matrix
-        thetao(count,:,:,:) = squeeze(nanmean(ensemble));
-        thetao_model_names{count} = model1;
-    elseif ~strcmp(model1,model2)
-        disp([num2str(x,'%03d'),' thetao different count: ',num2str(count),' ',model1,' ',model2])
-        % If models are different
-        if ens_count > 1
-            thetao(count,:,:,:) = squeeze(nanmean(ensemble));
-            thetao_model_names{count} = model1;
-            count = count + 1;
-            % Reset ensemble stuff
-            ens_count = 1;
-            ensemble = NaN(20,length(t_depth),length(t_lat),length(t_lon));
-        else
-            infile = models{x};
-            unit_test = getnc(infile,'thetao_mean_WOAGrid');
-            unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-            if min(min(unit_test(1,:,:))) > 250; unit_test = unit_test-273.15; end
-            thetao(count,:,:,:) = unit_test;
-            thetao_model_names{count} = model1;
-            count = count + 1;
-        end
-    else
-        disp([num2str(x,'%03d'),' thetao same      count: ',num2str(count),' ',model1,' ',model2])
-        % If models are the same
-        infile = models{x};
-        unit_test = getnc(infile,'thetao_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        if min(unit_test(:)) > 250; unit_test = unit_test-273.15; end
-        ensemble(ens_count,:,:,:) = unit_test;
-        ens_count = ens_count + 1;
-    end
-end
-% Trim excess values
-thetao((count+1):end,:,:,:) = [];
-thetao_model_names((count+1):end) = [];
-clear count ens_count ensemble in_path infile model* unit_test x
-
-% Cludgey fix for bad data
-%{
-thetao(thetao < -3) = NaN;
-thetao(thetao > 35) = NaN;
-for x = 18:31
-    % Truncate big stuff
-    level = squeeze(thetao(:,x,:,:));
-    index = level > 10;
-    level(index) = NaN;
-    thetao(:,x,:,:) = level;
-    if x >= 23
-        level = squeeze(thetao(:,x,:,:));
-        index = level > 5;
-        level(index) = NaN;
-        thetao(:,x,:,:) = level;
-    end
-    if x >= 26
-        level = squeeze(thetao(:,x,:,:));
-        index = level > 2.5;
-        level(index) = NaN;
-        thetao(:,x,:,:) = level;
-    end
-    % truncate small stuff
-    level = squeeze(thetao(:,x,:,:));
-    index = level < -3;
-    level(index) = NaN;
-    thetao(:,x,:,:) = level;
-end
-%}
-
-% Mask marginal seas
-for mod = 1:size(thetao,1)
-    for x = 1:length(t_depth)
-        thetao(mod,x,:,:) = squeeze(thetao(mod,x,:,:)).*basins3_NaN_ones;
-    end
-end; clear mod x
-
-% Calculate ensemble mean
-thetao_mean = squeeze(nanmean(thetao,1)); % Generate mean amongst models
-
-% CMIP potential temperature
-close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-ax1 = subplot(1,2,1);
-pcolor(t_lon,t_lat,squeeze(thetao_mean(1,:,:))); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); hold all
-contour(t_lon,t_lat,squeeze(thetao_mean(1,:,:)),ptcont1,'color','k');
-ax2 = subplot(1,2,2);
-pcolor(t_lat,t_depth,nanmean(thetao_mean,3)); shading flat; caxis([ptcont1(1) ptcont1(end)]); clmap(27); axis ij; hold all
-contour(t_lat,t_depth,nanmean(thetao_mean,3),ptcont1,'color','k');
-hh1 = colorbarf_nw('horiz',ptcont3,ptcont2);
-set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
-export_fig([outDir,datestr(now,'yymmdd'),'_CMIP6_thetao_mean'],'-png')
-
-% Calculate zonal means
-thetao_mean_zonal = squeeze(nanmean(thetao_mean,3)); % Generate zonal mean
-disp('thetao done..')
-
-%% Do model salinity
-inVar = '*.so.';
-[~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
-models = strtrim(models);
-temp = regexp(models,'\n','split'); clear models status
-models = unique(temp); clear temp
-
-% Trim model list for duplicates - Use plots to guide trimming
-bad_list = {
-    'CAS.FGOALS-f3-L.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190822' ; % rotated pole
-    'CNRM-CERFACS.CNRM-CM6-1-HR.r1i1p1f2.mon.so.ocean.glb-l-gn.v20191021' ; % zeros
-    'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.so.ocean.glb-l-gr.v20190826' ; % mask/missing values
-    'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.so.ocean.glb-l-gr.v20190830'
-    'E3SM-Project.E3SM-1-0.r3i1p1f1.mon.so.ocean.glb-l-gr.v20190827'
-    'E3SM-Project.E3SM-1-0.r4i1p1f1.mon.so.ocean.glb-l-gr.v20190909'
-    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.so.ocean.glb-l-gr.v20191009'
-    'IPSL.IPSL-CM6A-LR.r10i1p1f1.mon.so.ocean.glb-l-gn.v20180803' ; % zeros
-    'IPSL.IPSL-CM6A-LR.r11i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r12i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r13i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r14i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r15i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r16i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r17i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r18i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r19i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r1i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r20i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r21i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r22i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r23i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r24i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r25i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r26i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r27i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r28i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r29i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r2i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r30i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r31i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r32i1p1f1.mon.so.ocean.glb-l-gn.v20190802'
-    'IPSL.IPSL-CM6A-LR.r3i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r4i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r5i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r6i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r7i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r8i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r9i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'MIROC.MIROC-ES2L.r1i1p1f2.mon.so.ocean.glb-l-gn.v20190823' ; % ?
-    'MIROC.MIROC-ES2L.r2i1p1f2.mon.so.ocean.glb-l-gn.v20190823'
-    'MIROC.MIROC-ES2L.r3i1p1f2.mon.so.ocean.glb-l-gn.v20190823'
-    'NCAR.CESM2.r10i1p1f1.mon.so.ocean.glb-l-gn.v20190313' ; % zeros
-    'NCAR.CESM2.r11i1p1f1.mon.so.ocean.glb-l-gn.v20190514'
-    'NCAR.CESM2.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r3i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r4i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r5i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r6i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r7i1p1f1.mon.so.ocean.glb-l-gn.v20190311' ; % depth coord
-    'NCAR.CESM2.r8i1p1f1.mon.so.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2.r9i1p1f1.mon.so.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2-WACCM.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190808' ; % zeros
-    'NCAR.CESM2-WACCM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190808'
-    'NCAR.CESM2-WACCM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20190808'
-    'NCC.NorESM2-LM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190920' ; % depth issue >1000m
-    'NOAA-GFDL.GFDL-CM4.r1i1p1f1.mon.so.ocean.glb-l-gn.v20180701' ; % zeros
-    'NOAA-GFDL.GFDL-ESM4.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190726' ; % zeros
-};
-
-% CMIP5
-%{
-bad_list = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r10i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r2i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r3i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r5i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r6i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.EC-EARTH.historical.r9i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.so.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.so.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r6i1p1.an.ocn.so.ver-v20130404.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.GISS-E2-H.historical.r6i1p3.an.ocn.so.ver-v20130404.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC4h.historical.r1i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC4h.historical.r2i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC4h.historical.r3i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r1i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r2i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r3i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r4i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r4i1p1.an.ocn.so.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/130522/so/cmip5.MIROC5.historical.r5i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-};
-
-bad_list_130222 = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r10i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r12i1p1.an.ocn.so.ver-v20120516.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r14i1p1.an.ocn.so.ver-v20120516.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r2i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r3i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r5i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r6i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r7i1p1.an.ocn.so.ver-v20120515.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.EC-EARTH.historical.r9i1p1.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r1i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r2i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r3i1p3.an.ocn.so.ver-v20120313.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r4i1p3.an.ocn.so.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-H.historical.r5i1p3.an.ocn.so.ver-v20120314.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC4h.historical.r1i1p1.an.ocn.so.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC4h.historical.r2i1p1.an.ocn.so.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC4h.historical.r3i1p1.an.ocn.so.ver-v20110907.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r1i1p1.an.ocn.so.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r2i1p1.an.ocn.so.ver-v20111202.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r3i1p1.an.ocn.so.ver-v20111202.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r4i1p1.an.ocn.so.ver-v20120112.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r4i1p1.an.ocn.so.ver-v20121221.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.MIROC5.historical.r5i1p1.an.ocn.so.ver-v20120608.1975-2005_anClim_WOAGrid.nc'
-};
-
-bad_list2 = {
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.so.ver-v20120206.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r1i1p3.an.ocn.so.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.so.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r2i1p3.an.ocn.so.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.so.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r3i1p3.an.ocn.so.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.so.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r4i1p3.an.ocn.so.ver-v20121015.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.so.ver-1.1975-2005_anClim_WOAGrid.nc'
-'/work/durack1/Shared/120711_AR5/Chap09/ncs/so/cmip5.GISS-E2-R.historical.r5i1p3.an.ocn.so.ver-v20120207.1975-2005_anClim_WOAGrid.nc'
-};
-%}
-
-
-% Truncate using dupe list
-ind = NaN(40,1); y = 1;
-for x = 1:length(models)
-    splits = strfind(models{x},'/');
-    mod = models{x}(splits(end)+1:end);
-    separators = strfind(mod,'.');
-    mod = mod(separators(3)+1:separators(11)-1);
-    %disp(['mod:',mod])
-    match = strfind(bad_list,mod);
-    match = find(~cellfun(@isempty,match), 1);
-    if ~isempty(match)
-        ind(y) = x;
-        y = y + 1;
-        disp(['drop: ',mod])
-    end
-end
-% Truncate using ind list
-ind = ind(~isnan(ind));
-ind = ismember(1:length(models),ind); % Logic is create index of files in bad_list
-models(ind) = [];
-clear bad_list ind match splits x y
-
-% Build matrix of model results
-so = NaN(length(models),length(t_depth),length(t_lat),length(t_lon));
-so_model_names = cell(length(models),1);
-count = 1; ens_count = 1;
-ensemble = NaN(50,length(t_depth),length(t_lat),length(t_lon));
-for x = 1:(length(models)-1)
-    % Test for multiple realisations and generate ensemble mean
-    model_ind = strfind(models{x},'.'); temp = models{x};
-    model1 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
-    model_ind = strfind(models{x+1},'.'); temp = models{x+1};
-    model2 = temp((model_ind(4)+1):(model_ind(5)-1)); clear temp
-
-    % Plot model fields for bug-tracking - 2D and global zonal mean
-    tmp1 = getnc(models{x},'so_mean_WOAGrid'); temp = models{x};
-    tmp1 = tmp1(:,:,[181:360,1:180]); % Correct lon offset issue
-    ind = strfind(temp,'/'); tmp1name = regexprep(temp((ind(end)+1):end),'.nc','');
-    tmp2 = getnc(models{x+1},'so_mean_WOAGrid'); temp = models{x+1};
-    tmp2 = tmp2(:,:,[181:360,1:180]); % Correct lon offset issue
-    ind = strfind(temp,'/'); tmp2name = regexprep(temp((ind(end)+1):end),'.nc','');
-    % Plot model 1
-    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-    ax1 = subplot(1,2,1);
-    pcolor(t_lon,t_lat,squeeze(tmp1(1,:,:))); shading flat; caxis([scont1(1) scont1(end)]); clmap(27); hold all
-    contour(t_lon,t_lat,squeeze(tmp1(1,:,:)),scont1,'color','k');
-    ax2 = subplot(1,2,2);
-    pcolor(t_lat,t_depth,nanmean(tmp1,3)); shading flat; caxis([scont3(1) scont3(end)]); clmap(27); axis ij; hold all
-    contour(t_lat,t_depth,nanmean(tmp1,3),scont3,'color','k');
-    hh1 = colorbarf_nw('horiz',scont3,scont2);
-    set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-    set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-    set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-    set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-    set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-    set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'so/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
-    close all
-    clear handle ax1 ax2 hh1 tmp1 ind tmp1name
-    % Plot model 2
-    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-    ax1 = subplot(1,2,1);
-    pcolor(t_lon,t_lat,squeeze(tmp2(1,:,:))); shading flat; caxis([scont1(1) scont1(end)]); clmap(27); hold all
-    contour(t_lon,t_lat,squeeze(tmp2(1,:,:)),scont1,'color','k');
-    ax2 = subplot(1,2,2);
-    pcolor(t_lat,t_depth,nanmean(tmp2,3)); shading flat; caxis([scont3(1) scont3(end)]); clmap(27); axis ij; hold all
-    contour(t_lat,t_depth,nanmean(tmp2,3),scont3,'color','k');
-    hh1 = colorbarf_nw('horiz',scont3,scont2);
-    set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-    set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-    set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-    set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-    set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-    set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');    
-    export_fig([outData,'so/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
-    close all
-    clear handle ax1 ax2 hh1 tmp2 tmp2name
-    
-    if x == (length(models)-1) && ~strcmp(model1,model2)
-        % Process final fields - if different
-        infile = models{x};
-        unit_test = getnc(infile,'so_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        so(count,:,:,:) = unit_test;
-        so_model_names{count} = model1;
-        count = count + 1;
-        infile = models{x+1};
-        unit_test = getnc(infile,'so_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        so(count,:,:,:) = unit_test;
-        so_model_names{count} = model2;
-    elseif x == (length(models)-1) && strcmp(model1,model2)
-        % Process final fields - if same
-        infile = models{x};
-        unit_test = getnc(infile,'so_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        ensemble(ens_count,:,:,:) = unit_test;
-        ens_count = ens_count + 1;
-        infile = models{x+1};
-        unit_test = getnc(infile,'so_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        ensemble(ens_count,:,:,:) = unit_test;
-        % Write to matrix
-        so(count,:,:,:) = squeeze(nanmean(ensemble));
-        so_model_names{count} = model1;
-    elseif ~strcmp(model1,model2)
-        disp([num2str(x,'%03d'),' so     different count: ',num2str(count),' ',model1,' ',model2])
-        % If models are different
-        if ens_count > 1
-            so(count,:,:,:) = squeeze(nanmean(ensemble));
-            so_model_names{count} = model1;
-            count = count + 1;
-            % Reset ensemble stuff
-            ens_count = 1;
-            ensemble = NaN(20,length(t_depth),length(t_lat),length(t_lon));
-        else
-            infile = models{x};
-            unit_test = getnc(infile,'so_mean_WOAGrid');
-            unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-            so(count,:,:,:) = unit_test;
-            so_model_names{count} = model1;
-            count = count + 1;
-        end
-    else
-        disp([num2str(x,'%03d'),' so     same      count: ',num2str(count),' ',model1,' ',model2])
-        % If models are the same
-        infile = models{x};
-        unit_test = getnc(infile,'so_mean_WOAGrid');
-        unit_test = unit_test(:,:,[181:360,1:180]); % Correct lon offset issue
-        ensemble(ens_count,:,:,:) = unit_test;
-        ens_count = ens_count + 1;
-    end
-end
-% Trim excess values
-so((count+1):end,:,:,:) = [];
-so_model_names((count+1):end) = [];
-clear count ens_count ensemble in_path infile model* unit_test x
-
-% Cludgey fix for bad data
-%{
-so(so < 0) = NaN;
-so(so > 50) = NaN;
-for x = 18:31
-    % Truncate big stuff
-    level = squeeze(so(:,x,:,:));
-    index = level > 50;
-    level(index) = NaN;
-    so(:,x,:,:) = level;
-    if x >= 23
-        level = squeeze(so(:,x,:,:));
-        index = level > 37;
-        level(index) = NaN;
-        so(:,x,:,:) = level;
-    end
-    % truncate small stuff
-    level = squeeze(so(:,x,:,:));
-    index = level < 0;
-    level(index) = NaN;
-    so(:,x,:,:) = level;
-end
-%}
-
-% Mask marginal seas
-for mod = 1:size(so,1)
-    for x = 1:length(t_depth)
-        so(mod,x,:,:) = squeeze(so(mod,x,:,:)).*basins3_NaN_ones;
-    end
-end; clear mod x
-
-% Calculate ensemble mean
-so_mean = squeeze(nanmean(so,1)); % Generate mean amongst models
-
-% WOA18 salinity
-close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle)
-ax1 = subplot(1,2,1);
-pcolor(t_lon,t_lat,squeeze(so_mean(1,:,:))); shading flat; caxis([scont1(1) scont1(end)]); clmap(27); hold all
-contour(t_lon,t_lat,squeeze(so_mean(1,:,:)),scont1,'color','k');
-ax2 = subplot(1,2,2);
-pcolor(t_lat,t_depth,nanmean(so_mean,3)); shading flat; caxis([scont3(1) scont3(end)]); clmap(27); axis ij; hold all
-contour(t_lat,t_depth,nanmean(so_mean,3),scont3,'color','k');
-hh1 = colorbarf_nw('horiz',scont3,scont2);
-set(handle,'Position',[3 3 16 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-set(ax1,'Position',[0.03 0.19 0.45 0.8]);
-set(ax2,'Position',[0.54 0.19 0.45 0.8]);
-set(hh1,'Position',[0.06 0.075 0.9 0.03],'fontsize',fonts_c);
-set(ax1,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'xlim',[0 360],'xtick',0:30:360,'xticklabel',{'0','30','60','90','120','150','180','210','240','270','300','330','360'},'xminort','on', ...
-    'ylim',[-90 90],'ytick',-90:20:90,'yticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'yminort','on');
-set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
-    'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
-export_fig([outDir,datestr(now,'yymmdd'),'_CMIP6_so_mean'],'-png')
-
-% Calculate zonal means
-so_mean_zonal = squeeze(nanmean(so_mean,3)); % Generate zonal mean
-disp('so done..')
-%}
-
 disp('** Model processing complete.. **')
 
 %% Save WOA18 and CMIP6 ensemble matrices to file
-% Obs
+% Rename obs
 so_woa18_mean = s_mean; clear s_mean
 so_woa18_mean_zonal = s_mean_zonal; clear s_mean_zonal
 thetao_woa18_mean = pt_mean; clear pt_mean
 thetao_woa18_mean_zonal = pt_mean_zonal; clear pt_mean_zonal
-% Models
-so_cmip6 = so; clear so
-so_cmip6_mean = so_mean; clear so_mean
-so_cmip6_mean_zonal = so_mean_zonal; clear so_mean_zonal
-thetao_cmip6 = thetao; clear thetao
-thetao_cmip6_mean = thetao_mean; clear thetao_mean
-thetao_cmip6_mean_zonal = thetao_mean_zonal; clear thetao_mean_zonal
-save([outDir,datestr(now,'yymmdd'),'_CMIP6andWOA09_thetaoAndso.mat'],'so_woa18_mean','thetao_woa18_mean','so_woa18_mean_zonal','thetao_woa18_mean_zonal', ...
-                                                                     'so_cmip6_mean','thetao_cmip6_mean','so_cmip6_mean_zonal','thetao_cmip6_mean_zonal', ...
-                                                                     'so_cmip6','thetao_cmip6');
-%                                                                     'so_cmip5_mean','thetao_cmip5_mean','so_cmip5_mean_zonal','thetao_cmip5_mean_zonal', ...
-%                                                                     'so_cmip5','thetao_cmip5', ...
+save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa18_mean','thetao_woa18_mean', ...
+                                                                     'so_woa18_mean_zonal','thetao_woa18_mean_zonal', ...
+                                                                     'so_cmip6_modelNames','thetao_cmip6_modelNames', ...
+                                                                     'so_cmip6','thetao_cmip6', ...
+                                                                     'so_cmip6_mean','thetao_cmip6_mean', ...
+                                                                     'so_cmip6_mean_zonal','thetao_cmip6_mean_zonal', ...
+                                                                     'so_cmip5_modelNames','thetao_cmip5_modelNames', ...
+                                                                     'so_cmip5','thetao_cmip5', ...
+                                                                     'so_cmip5_mean','thetao_cmip5_mean', ...
+                                                                     'so_cmip5_mean_zonal','thetao_cmip5_mean_zonal');
 disp('** All data written to *.mat.. **')
 
-%% Figure 3.21 - thetao and so clim vs WOA18
+%% Figure 3.21 global - thetao and so clim vs WOA18
 close all
 % Determine depth split
 depth1 = find(t_depth == 1000);
+for mipEra = 1:2
+    switch mipEra
+        case 1
+            % Create anomaly fields
+            thetao_mean_anom_zonal = thetao_cmip5_mean_zonal - thetao_woa18_mean_zonal;
+            pt_mean_zonal = thetao_woa18_mean_zonal;
+            so_mean_anom_zonal = so_cmip5_mean_zonal - so_woa18_mean_zonal;
+            s_mean_zonal = so_woa18_mean_zonal;
+            mipEraId = 'cmip5';
+        case 2
+            % Create anomaly fields
+            thetao_mean_anom_zonal = thetao_cmip6_mean_zonal - thetao_woa18_mean_zonal;
+            pt_mean_zonal = thetao_woa18_mean_zonal;
+            so_mean_anom_zonal = so_cmip6_mean_zonal - so_woa18_mean_zonal;
+            s_mean_zonal = so_woa18_mean_zonal;
+            mipEraId = 'cmip6';
+    end
+    % Do thetao global
+    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle); clmap(27)
 
-% Create anomaly
-thetao_mean_anom_zonal = thetao_cmip6_mean_zonal - thetao_woa18_mean_zonal;
-pt_mean_zonal = thetao_woa18_mean_zonal;
-so_mean_anom_zonal = so_cmip6_mean_zonal - so_woa18_mean_zonal;
-s_mean_zonal = so_woa18_mean_zonal;
+    % Potential Temperature
+    % 0-1000db
+    ax1 = subplot(2,2,1);
+    [~,h] = contourf(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),50); hold all
+    set(h,'linestyle','none'); hold all; clear h
+    axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
+    contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
+    [c,h] = contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),0:5:30,'k','linewidth',2);
+    clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+    contour(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
+    ylab1 = ylabel('Depth (m)','fontsize',fonts);
+    set(ax1,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+        'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{'0','200','400','600','800',''},'yminort','on', ...
+        'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
 
-% Do thetao global
-close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle); clmap(27)
+    % 1000-5000db
+    ax3 = subplot(2,2,3);
+    [~,h] = contourf(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),50); hold all
+    set(h,'linestyle','none'); hold all; clear h
+    axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
+    contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
+    [c,h] = contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),0:5:30,'k','linewidth',2);
+    clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+    contour(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
+    xlab3 = xlabel('Latitude','fontsize',fonts);
+    text(98,4650,'Temperature','fontsize',fonts_lab,'horizontalAlignment','right','color','k','fontweight','b');
+    text(-88,4650,'A','fontsize',fonts_lab*1.5,'horizontalAlignment','left','color','k','fontweight','b');
+    hh3 = colorbarf_nw('horiz',-ptscale(1):0.25:ptscale(1),-ptscale(1):1:ptscale(1));
+    set(hh3,'clim',[-ptscale(1) ptscale(1)]); % See https://www.mathworks.com/help/matlab/ref/matlab.graphics.illustration.colorbar-properties.html
+    set(ax3,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+        'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
+        'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
 
-% Potential Temperature
-% 0-1000db
-ax1 = subplot(2,2,1);
-[~,h] = contourf(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),50); hold all
-set(h,'linestyle','none'); hold all; clear h
-axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
-contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
-[c,h] = contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),0:5:30,'k','linewidth',2);
-clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
-contour(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
-ylab1 = ylabel('Depth (m)','fontsize',fonts);
-set(ax1,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
-    'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{'0','200','400','600','800',''},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
+    % Salinity
+    % 0-1000db
+    ax2 = subplot(2,2,2);
+    [~,h] = contourf(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),50); hold all
+    set(h,'linestyle','none'); hold all; clear h
+    axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
+    contour(t_lat,t_depth(1:depth1),s_mean_zonal(1:depth1,:),scont1,'k')
+    [c,h] = contour(t_lat,t_depth(1:depth1),s_mean_zonal(1:depth1,:),scont2,'k','linewidth',2);
+    clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+    contour(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
+    set(ax2,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+        'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{''},'yminort','on', ...
+        'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
 
-% 1000-5000db
-ax3 = subplot(2,2,3);
-[~,h] = contourf(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),50); hold all
-set(h,'linestyle','none'); hold all; clear h
-axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
-contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
-[c,h] = contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),0:5:30,'k','linewidth',2);
-clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
-contour(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
-xlab3 = xlabel('Latitude','fontsize',fonts);
-text(-88,4650,'Temperature','fontsize',fonts_lab,'horizontalAlignment','left','color','k','fontweight','b');
-text(88,4650,'A','fontsize',fonts_lab*1.5,'horizontalAlignment','right','color','k','fontweight','b');
-hh3 = colorbarf_nw('horiz',-ptscale(1):0.25:ptscale(1),-ptscale(1):1:ptscale(1));
-set(hh3,'clim',[-ptscale(1) ptscale(1)]); % See https://www.mathworks.com/help/matlab/ref/matlab.graphics.illustration.colorbar-properties.html
-set(ax3,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
-    'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
+    % 1000-5000db
+    ax4 = subplot(2,2,4);
+    [~,h] = contourf(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),50); hold all
+    set(h,'linestyle','none'); hold all; clear h
+    axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
+    contour(t_lat,t_depth(depth1:end),s_mean_zonal(depth1:end,:),scont1,'k')
+    [c,h] = contour(t_lat,t_depth(depth1:end),s_mean_zonal(depth1:end,:),scont2,'k','linewidth',2);
+    clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+    contour(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
+    xlab4 = xlabel('Latitude','fontsize',fonts);
+    text(94,4650,'Salinity','fontsize',fonts_lab,'horizontalAlignment','right','color','k','fontweight','b');
+    text(-88,4650,'B','fontsize',fonts_lab*1.5,'horizontalAlignment','left','color','k','fontweight','b');
+    hh4 = colorbarf_nw('horiz',-sscale(1):0.125:sscale(1),-sscale(1):0.25:sscale(1));
+    set(hh4,'clim',[-sscale(1) sscale(1)])
+    set(ax4,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+        'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{''},'yminort','on', ...
+        'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
 
-% Salinity
-% 0-1000db
-ax2 = subplot(2,2,2);
-[~,h] = contourf(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),50); hold all
-set(h,'linestyle','none'); hold all; clear h
-axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
-contour(t_lat,t_depth(1:depth1),s_mean_zonal(1:depth1,:),scont1,'k')
-[c,h] = contour(t_lat,t_depth(1:depth1),s_mean_zonal(1:depth1,:),scont2,'k','linewidth',2);
-clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
-contour(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
-set(ax2,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
-    'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{''},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
+    % Resize into canvas
+    set(handle,'Position',[3 3 18 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
+    set(ax1,'Position',[0.0550 0.58 0.45 0.40]);
+    set(ax3,'Position',[0.0550 0.17 0.45 0.40]);
+    set(hh3,'Position',[0.0750 0.042 0.41 0.015],'fontsize',fonts);
+    set(ax2,'Position',[0.535 0.58 0.45 0.40]);
+    set(ax4,'Position',[0.535 0.17 0.45 0.40]);
+    set(hh4,'Position',[0.555 0.042 0.410 0.015],'fontsize',fonts);
 
-% 1000-5000db
-ax4 = subplot(2,2,4);
-[~,h] = contourf(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),50); hold all
-set(h,'linestyle','none'); hold all; clear h
-axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
-contour(t_lat,t_depth(depth1:end),s_mean_zonal(depth1:end,:),scont1,'k')
-[c,h] = contour(t_lat,t_depth(depth1:end),s_mean_zonal(depth1:end,:),scont2,'k','linewidth',2);
-clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
-contour(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
-xlab4 = xlabel('Latitude','fontsize',fonts);
-text(-88,4650,'Salinity','fontsize',fonts_lab,'horizontalAlignment','left','color','k','fontweight','b');
-text(88,4650,'B','fontsize',fonts_lab*1.5,'horizontalAlignment','right','color','k','fontweight','b');
-hh4 = colorbarf_nw('horiz',-sscale(1):0.125:sscale(1),-sscale(1):0.25:sscale(1));
-set(hh4,'clim',[-sscale(1) sscale(1)])
-set(ax4,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
-    'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{''},'yminort','on', ...
-    'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
+    % Drop blanking mask between upper and lower panels
+    %axr1 = axes('Position',[0.0475 0.5715 0.95 0.007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr1 = axes('Position',[0.0475 0.57065 0.95 0.0076],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr1 = axes('Position',[0.0475 0.57061 0.95 0.01],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
 
-% Resize into canvas
-set(handle,'Position',[3 3 18 7]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
-set(ax1,'Position',[0.0550 0.58 0.45 0.40]);
-set(ax3,'Position',[0.0550 0.17 0.45 0.40]);
-set(hh3,'Position',[0.0750 0.042 0.41 0.015],'fontsize',fonts);
-set(ax2,'Position',[0.535 0.58 0.45 0.40]);
-set(ax4,'Position',[0.535 0.17 0.45 0.40]);
-set(hh4,'Position',[0.555 0.042 0.410 0.015],'fontsize',fonts);
+    % Axis labels
+    set(ylab1,'Position',[-106 1000 1.0001]);
+    set(xlab3,'Position',[0 5600 1.0001]);
+    set(xlab4,'Position',[0 5600 1.0001]);
 
-% Drop blanking mask between upper and lower panels
-%axr1 = axes('Position',[0.0475 0.5715 0.95 0.007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
-axr1 = axes('Position',[0.0475 0.57065 0.95 0.0076],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    % Print to file
+    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_',mipEraId,'minusWOA18_thetaoAndso_global'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_',mipEraId,'minusWOA18_thetaoAndso_global'],'-eps')
 
-% Axis labels
-set(ylab1,'Position',[-106 1000 1.0001]);
-set(xlab3,'Position',[0 5600 1.0001]);
-set(xlab4,'Position',[0 5600 1.0001]);
+    close all %set(gcf,'visi','on');
+    clear ax* c h handle hh* xlab* ylab* mipEra
+end
 
-% Print to file
-export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_CMIP6minusWOA18_thetaoAndso'],'-png')
-export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_CMIP6minusWOA18_thetaoAndso'],'-eps')
-
-close all %set(gcf,'visi','on');
+%% Figure 3.21 basins - thetao and so clim vs WOA18
