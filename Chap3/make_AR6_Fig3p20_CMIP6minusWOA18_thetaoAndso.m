@@ -91,7 +91,7 @@ s_mean = s_mean(:,:,[181:360,1:180]);
 
 % Mask marginal seas
 infile = os_path([homeDir,'code/make_basins.mat']);
-load(infile,'basins3_NaN_ones'); % lat/lon same as WOA09
+load(infile,'basins3_NaN_ones'); % lat/lon same as WOA18
 %clf; pcolor(basins3_NaN_ones); shading flat
 for x = 1:length(t_depth)
     t_mean(x,:,:) = squeeze(t_mean(x,:,:)).*basins3_NaN_ones;
@@ -640,7 +640,8 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
                                                                      'so_cmip5_modelNames','thetao_cmip5_modelNames', ...
                                                                      'so_cmip5','thetao_cmip5', ...
                                                                      'so_cmip5_mean','thetao_cmip5_mean', ...
-                                                                     'so_cmip5_mean_zonal','thetao_cmip5_mean_zonal');
+                                                                     'so_cmip5_mean_zonal','thetao_cmip5_mean_zonal', ...
+                                                                     't_depth','t_lat','t_lon');
 disp('** All data written to *.mat.. **')
 
 %% Figure 3.21 global - thetao and so clim vs WOA18
@@ -742,8 +743,6 @@ for mipEra = 1:2
     set(hh4,'Position',[0.555 0.042 0.410 0.015],'fontsize',fonts);
 
     % Drop blanking mask between upper and lower panels
-    %axr1 = axes('Position',[0.0475 0.5715 0.95 0.007],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
-    %axr1 = axes('Position',[0.0475 0.57065 0.95 0.0076],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
     axr1 = axes('Position',[0.0475 0.57061 0.95 0.01],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
 
     % Axis labels
@@ -760,3 +759,200 @@ for mipEra = 1:2
 end
 
 %% Figure 3.21 basins - thetao and so clim vs WOA18
+close all
+% Load basin mask
+infile = os_path([homeDir,'code/make_basins.mat']);
+load(infile,'basins3_NaN','lat','lon'); % lat/lon same as WOA18
+%pcolor(lon,lat,basins3_NaN); shading flat
+% Determine depth split
+depth1 = find(t_depth == 1000);
+for mipEra = 1:2
+    switch mipEra
+        case 0
+            % Create anomaly fields
+            thetao_mean_anom_zonal = thetao_cmip5_mean_zonal - thetao_woa18_mean_zonal;
+            pt_mean_zonal = thetao_woa18_mean_zonal;
+            so_mean_anom_zonal = so_cmip5_mean_zonal - so_woa18_mean_zonal;
+            so_mean_zonal = so_woa18_mean_zonal;
+            mipEraId = 'cmip5';
+        case 1
+            % Create anomaly fields
+            thetao_mean_anom = thetao_cmip5_mean - thetao_woa18_mean;
+            pt_mean = thetao_woa18_mean;
+            so_mean_anom = so_cmip5_mean - so_woa18_mean;
+            so_mean = so_woa18_mean;
+            mipEraId = 'cmip5';
+        case 2
+            % Create anomaly fields
+            thetao_mean_anom = thetao_cmip6_mean - thetao_woa18_mean;
+            pt_mean = thetao_woa18_mean;
+            so_mean_anom = so_cmip6_mean - so_woa18_mean;
+            so_mean = so_woa18_mean;
+            mipEraId = 'cmip6';
+    end
+    % Do thetao global
+    close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle); clmap(27)
+
+    for basin = 1:4
+        switch basin
+            case 1
+                % Global
+                axInfo = 1;
+                mask = ones([102,size(basins3_NaN)]);
+                basinLabel = 'A';
+            case 2
+                % Atlantic
+                axInfo = 5;
+                tmp = basins3_NaN;
+                index = tmp ~= 2; tmp(index) = NaN; clear index
+                tmp = repmat(tmp,[1 1 102]);
+                mask = shiftdim(tmp,2); clear tmp
+                %pcolor(lon,lat,squeeze(mask(1,:,:))); shading flat
+                basinLabel = 'B';
+            case 3
+                % Pacific
+                axInfo = 9;
+                tmp = basins3_NaN;
+                index = tmp ~= 1; tmp(index) = NaN; clear index
+                tmp = repmat(tmp,[1 1 102]);
+                mask = shiftdim(tmp,2); clear tmp
+                %pcolor(lon,lat,squeeze(mask(1,:,:))); shading flat
+                basinLabel = 'C';
+            case 4
+                % Indian
+                axInfo = 13;
+                tmp = basins3_NaN;
+                index = tmp ~= 3; tmp(index) = NaN; clear index
+                tmp = repmat(tmp,[1 1 102]);
+                mask = shiftdim(tmp,2); clear tmp
+                %pcolor(lon,lat,squeeze(mask(1,:,:))); shading flat
+                basinLabel = 'D';
+        end
+        
+        % Generate anomaly zonal means
+        thetao_mean_anom_zonal = nanmean((thetao_mean_anom.*mask),3);
+        pt_mean_zonal = nanmean((pt_mean.*mask),3);
+        so_mean_anom_zonal = nanmean((so_mean_anom.*mask),3);
+        so_mean_zonal = nanmean((so_mean.*mask),3);
+        
+        % Potential Temperature
+        % 0-1000db
+        eval(['ax',num2str(axInfo),' = subplot(8,2,',num2str(axInfo),');']);
+        [~,h] = contourf(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),50); hold all
+        set(h,'linestyle','none'); hold all; clear h
+        axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
+        contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
+        [c,h] = contour(t_lat,t_depth(1:depth1),pt_mean_zonal(1:depth1,:),0:5:30,'k','linewidth',2);
+        clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+        contour(t_lat,t_depth(1:depth1),thetao_mean_anom_zonal(1:depth1,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
+        if ismember(axInfo,[1 5 9 13])
+            eval(['ylab',num2str(axInfo),' = ylabel(''Depth (m)'',''fontsize'',fonts);'])
+        end
+        eval(['axHandle = ax',num2str(axInfo),';'])
+        set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+            'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{'0','200','400','600','800',''},'yminort','on', ...
+            'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
+
+        % 1000-5000db
+        eval(['ax',num2str(axInfo+2),' = subplot(8,2,',num2str(axInfo+2),');']);
+        [~,h] = contourf(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),50); hold all
+        set(h,'linestyle','none'); hold all; clear h
+        axis ij, caxis([-1 1]*ptscale(1)), clmap(27), hold all
+        contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),[2.5 7.5 12.5 17.5 22.5 27.5],'k')
+        [c,h] = contour(t_lat,t_depth(depth1:end),pt_mean_zonal(depth1:end,:),0:5:30,'k','linewidth',2);
+        clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+        contour(t_lat,t_depth(depth1:end),thetao_mean_anom_zonal(depth1:end,:),-ptscale(2):1:ptscale(2),'color',[1 1 1]);
+        text(98,4650,'Temperature','fontsize',fonts_lab,'horizontalAlignment','right','color','k','fontweight','b');
+        text(-88,4650,basinLabel,'fontsize',fonts_lab*1.5,'horizontalAlignment','left','color','k','fontweight','b');
+        if basin == 4
+            xlab1 = xlabel('Latitude','fontsize',fonts);
+            hh1 = colorbarf_nw('horiz',-ptscale(1):0.25:ptscale(1),-ptscale(1):1:ptscale(1));
+            set(hh1,'clim',[-ptscale(1) ptscale(1)]); % See https://www.mathworks.com/help/matlab/ref/matlab.graphics.illustration.colorbar-properties.html
+        end
+        eval(['axHandle = ax',num2str(axInfo+2),';'])
+        if basin == 4
+            set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+                'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
+        else
+            set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+                'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');            
+        end
+
+        %        set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+        %    'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
+        %    'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
+        
+        % Salinity
+        % 0-1000db
+        eval(['ax',num2str(axInfo+1),' = subplot(8,2,',num2str(axInfo+1),');']);
+        [~,h] = contourf(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),50); hold all
+        set(h,'linestyle','none'); hold all; clear h
+        axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
+        contour(t_lat,t_depth(1:depth1),so_mean_zonal(1:depth1,:),scont1,'k')
+        [c,h] = contour(t_lat,t_depth(1:depth1),so_mean_zonal(1:depth1,:),scont2,'k','linewidth',2);
+        clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+        contour(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
+        eval(['axHandle = ax',num2str(axInfo+1),';'])        
+        set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+            'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{''},'yminort','on', ...
+            'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
+
+        % 1000-5000db
+        eval(['ax',num2str(axInfo+3),' = subplot(8,2,',num2str(axInfo+3),');']);
+        [~,h] = contourf(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),50); hold all
+        set(h,'linestyle','none'); hold all; clear h
+        axis ij, caxis([-1 1]*sscale(1)), clmap(27), hold all
+        contour(t_lat,t_depth(depth1:end),so_mean_zonal(depth1:end,:),scont1,'k')
+        [c,h] = contour(t_lat,t_depth(depth1:end),so_mean_zonal(depth1:end,:),scont2,'k','linewidth',2);
+        clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
+        contour(t_lat,t_depth(depth1:end),so_mean_anom_zonal(depth1:end,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
+        text(94,4650,'Salinity','fontsize',fonts_lab,'horizontalAlignment','right','color','k','fontweight','b');
+        text(-88,4650,basinLabel,'fontsize',fonts_lab*1.5,'horizontalAlignment','left','color','k','fontweight','b');
+        if basin == 4
+            xlab2 = xlabel('Latitude','fontsize',fonts);
+            hh2 = colorbarf_nw('horiz',-sscale(1):0.125:sscale(1),-sscale(1):0.25:sscale(1));
+            set(hh2,'clim',[-sscale(1) sscale(1)])
+        end
+        eval(['axHandle = ax',num2str(axInfo+3),';'])
+        if basin == 4
+            set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+                'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{''},'yminort','on', ...
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{'90S','','','60S','','','30S','','','EQU','','','30N','','','60N','','','90N'},'xminort','on');
+        else
+            set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
+                'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{''},'yminort','on', ...
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');            
+        end
+    end
+
+    % Resize into canvas - A4 page 8.26 x 11.69" or 20.98 x 29.69
+    set(handle,'Position',[3 3 16.8 23.8]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
+    set(gcf,'visi','on')
+    keyboard
+    %set(ax1,'Position',[0.0550 0.58 0.45 0.40]);
+    %set(ax3,'Position',[0.0550 0.17 0.45 0.40]);
+    %set(hh1,'Position',[0.0750 0.042 0.41 0.015],'fontsize',fonts);
+    %set(ax2,'Position',[0.535 0.58 0.45 0.40]);
+    %set(ax4,'Position',[0.535 0.17 0.45 0.40]);
+    %set(hh2,'Position',[0.555 0.042 0.410 0.015],'fontsize',fonts);
+
+    % Drop blanking mask between upper and lower panels
+    %axr1 = axes('Position',[0.0475 0.57061 0.95 0.01],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+
+    % Axis labels
+    %set(ylab1,'Position',[-106 1000 1.0001]);
+    %set(ylab5,'Position',[-106 1000 1.0001]);
+    %set(ylab9,'Position',[-106 1000 1.0001]);
+    %set(ylab13,'Position',[-106 1000 1.0001]);
+    %set(xlab1,'Position',[0 5600 1.0001]);
+    %set(xlab2,'Position',[0 5600 1.0001]);
+
+    % Print to file
+    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p21_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-eps')
+
+    close all %set(gcf,'visi','on');
+    clear ax* c h handle hh* xlab* ylab* mipEra
+end
