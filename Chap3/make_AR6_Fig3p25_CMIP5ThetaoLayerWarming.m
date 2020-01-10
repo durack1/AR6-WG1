@@ -55,6 +55,7 @@
 % PJD  9 Jan 2020   - Purged redundant code
 % PJD  9 Jan 2020   - Got up to 10e16 vs 10e22 conversion
 % PJD  9 Jan 2020   - First pass finalized file
+% PJD  9 Jan 2020   - Updated figure naming with identifier (durack1)
 
 %                   - TODO:
 %                     Expand to 2018/19
@@ -1021,8 +1022,8 @@ set(textZJ1,'posi',[1997.2,-.14],'layer','front','fontsi',6)
 set(textZJ2,'posi',[1997.3,-.12],'layer','front','fontsi',4)
 set(lab2,'posi',[2017.7 1e22 0]); % Set B location
 
-export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p25_',mipEraId,'ThetaoLayerWarming'],'-png')
-export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p25_',mipEraId,'ThetaoLayerWarming'],'-eps','-painters')
+export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p25_',mipEraId,'ThetaoLayerWarming'],'-png')
+export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p25_',mipEraId,'ThetaoLayerWarming'],'-eps','-painters')
 
 %% Figure 3 - Hemisphere warming from Argo - Durack et al 2018 - Check values
 %{

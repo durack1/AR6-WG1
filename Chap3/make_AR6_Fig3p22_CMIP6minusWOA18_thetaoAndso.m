@@ -21,6 +21,7 @@
 % PJD  5 Jan 2020   - Finalized CMIP6/5 global plots
 % PJD  7 Jan 2020   - Updated with CMIP6/5 basin plots
 % PJD  9 Jan 2020   - Updated figure numbering to 3.22
+% PJD  9 Jan 2020   - Updated figure naming with identifier (durack1)
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -753,8 +754,8 @@ for mipEra = 1:2
     set(xlab4,'Position',[0 5600 1.0001]);
 
     % Print to file
-    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-png')
-    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-eps')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-eps')
 
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
@@ -793,10 +794,10 @@ for mipEra = 1:2
             so_mean = so_woa18_mean;
             mipEraId = 'cmip6';
     end
-    
+
     % Do basin zonals
     close all, handle = figure('units','centimeters','visible','off','color','w'); set(0,'CurrentFigure',handle); clmap(27)
-    
+
     for basin = 1:4
         switch basin
             case 1
@@ -839,7 +840,7 @@ for mipEra = 1:2
                 basinLabels = ['G','H'];
                 basinId = 'IND';
         end
-        
+
         % Generate anomaly zonal means
         thetao_mean_anom_zonal = nanmean((thetao_mean_anom.*mask),3);
         pt_mean_zonal = nanmean((pt_mean.*mask),3);
@@ -862,13 +863,13 @@ for mipEra = 1:2
         close figure 4
         close figure 5
         %}
-        
+
         % Set label xy pairs
         idLab = [-88,4650];
         sVarLab = [94 4650];
         tVarLab = [99 4650];
         basinIdLab = [0,4600];
-        
+
         % Potential Temperature
         % 0-1000db
         eval(['ax',num2str(axInfo),' = subplot(8,2,',num2str(axInfo),');']);
@@ -912,7 +913,7 @@ for mipEra = 1:2
         else
             set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
                 'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{'1000','','2000','','3000','','4000','','5000'},'yminort','on', ...
-                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');            
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');
         end
 
         % Salinity
@@ -925,7 +926,7 @@ for mipEra = 1:2
         [c,h] = contour(t_lat,t_depth(1:depth1),so_mean_zonal(1:depth1,:),scont2,'k','linewidth',2);
         clabel(c,h,'LabelSpacing',200,'fontsize',fonts_c,'fontweight','bold','color','k')
         contour(t_lat,t_depth(1:depth1),so_mean_anom_zonal(1:depth1,:),-sscale(2):0.25:sscale(2),'color',[1 1 1]);
-        eval(['axHandle = ax',num2str(axInfo+1),';'])        
+        eval(['axHandle = ax',num2str(axInfo+1),';'])
         set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
             'ylim',[0 1000],'ytick',0:200:1000,'yticklabel',{''},'yminort','on', ...
             'xlim',[-90 90],'xtick',-90:10:90,'xticklabel','','xminort','on');
@@ -955,12 +956,12 @@ for mipEra = 1:2
         else
             set(axHandle,'Tickdir','out','fontsize',fonts,'layer','top','box','on', ...
                 'ylim',[1000 5000],'ytick',1000:500:5000,'yticklabel',{''},'yminort','on', ...
-                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');            
+                'xlim',[-90 90],'xtick',-90:10:90,'xticklabel',{''},'xminort','on');
         end
     end
 
     % Resize into canvas - A4 page 8.26 x 11.69" or 20.98 x 29.69
-    set(handle,'Position',[3 3 16.8 23.8]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion  
+    set(handle,'Position',[3 3 16.8 23.8]) % Full page width (175mm (17) width x 83mm (8) height) - Back to 16.5 x 6 for proportion
     axHeight = 0.11; axWidth = 0.435;
     %                   x    y     wid  hei
     %set(hh1,'Position',[0.09 0.017 0.41 0.008],'fontsize',fonts);
@@ -983,14 +984,14 @@ for mipEra = 1:2
     set(ax8,'Position',[0.547 rowHeight axWidth axHeight]);
     rowHeight = rowHeight+axHeight+.005; %.645
     set(ax5,'Position',[0.08 rowHeight axWidth axHeight]);
-    set(ax6,'Position',[0.547 rowHeight axWidth axHeight]);    
+    set(ax6,'Position',[0.547 rowHeight axWidth axHeight]);
     rowHeight = rowHeight+axHeight+.01; %.765
     set(ax3,'Position',[0.08 rowHeight axWidth axHeight]);
     set(ax4,'Position',[0.547 rowHeight axWidth axHeight]);
     rowHeight = rowHeight+axHeight+.005; % 0.88
     set(ax1,'Position',[0.08 rowHeight axWidth axHeight]);
-    set(ax2,'Position',[0.547 rowHeight axWidth axHeight]);      
-    
+    set(ax2,'Position',[0.547 rowHeight axWidth axHeight]);
+
     % Drop blanking mask between upper and lower panels
     rowHeight = rowHeight-.004; %.876
     axr1 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
@@ -1008,11 +1009,11 @@ for mipEra = 1:2
     set(ylab9,'Position',[xPos yPos 1.0001]);
     set(ylab13,'Position',[xPos yPos 1.0001]);
     set(xlab15,'Position',[0 5686 1.0001]);
-    set(xlab16,'Position',[0 5686 1.0001]); 
-    
+    set(xlab16,'Position',[0 5686 1.0001]);
+
     % Print to file
-    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-png')
-    export_fig([outDir,datestr(now,'yymmdd'),'_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-eps')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-eps')
 
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
