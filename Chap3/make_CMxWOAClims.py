@@ -110,6 +110,7 @@ PJD 29 Dec 2019     - Ongoing issues with CESM2* data; zero-valued arrays being 
                       NCAR.CESM2.historical.r10i1p1f1.mon.so.ocean.glb-l-gn.v20190313 (14) - vert issues
                       NCAR.CESM2.historical.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308 (16) - zero arrays
 PJD 22 Jan 2020     - Testing for missing CMIP5 data (update call to trimModelList)
+PJD 27 Jan 2020     - Added CNRM-CM6-1-HR to exclusion list; invalid data and memory explosions
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
 
@@ -259,7 +260,7 @@ woa.close()
 for count,filePath in enumerate(fileList):
     print(count,filePath)
     # Add AWI, BCC kludge - have to fix grid issue - *** TypeError: 'NoneType' object is not subscriptable
-    if any(x in filePath for x in ['.AWI-CM-1-1-MR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.']):
+    if any(x in filePath for x in ['.AWI-CM-1-1-MR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']):
         strTxt = ' '.join([str(count),'** Known grid issue with:',filePath.split('/')[-1],'skipping..**'])
         print(strTxt)
         writeToLog(logFile,strTxt)
