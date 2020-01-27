@@ -109,6 +109,7 @@ PJD 29 Dec 2019     - Need to exclude CNRM-CM6-1-HR from direct analysis, using 
 PJD 29 Dec 2019     - Ongoing issues with CESM2* data; zero-valued arrays being loaded for some realizations; vertical interp issues for others
                       NCAR.CESM2.historical.r10i1p1f1.mon.so.ocean.glb-l-gn.v20190313 (14) - vert issues
                       NCAR.CESM2.historical.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308 (16) - zero arrays
+PJD 22 Jan 2020     - Testing for missing CMIP5 data (update call to trimModelList)
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
 
@@ -180,7 +181,7 @@ for var in varsToTest:
         sys.exit
 #%% tests
 '''
-mipEra = 'CMIP6'
+mipEra = 'CMIP5'
 activityId = 'CMIP'
 experimentId = 'historical'
 realm = 'ocean'
@@ -219,7 +220,7 @@ writeToLog(logFile,' '.join(['searchPath:',searchPath]))
 fileList = glob.glob(searchPath) ; fileList.sort()
 print(var,' len(fileList):     ',len(fileList))
 writeToLog(logFile,''.join([var,' len(fileList):     ',str(len(fileList))]))
-fileListTrim = trimModelList(fileList)
+fileListTrim = trimModelList(fileList, criteria=['tpoints', 'cdate', 'ver']) ; #'publish',
 print(var,' len(fileListTrim): ',len(fileListTrim))
 writeToLog(logFile,''.join([var,' len(fileListTrim): ',str(len(fileListTrim))]))
 print('_'.join([mip,experimentId,var]))
