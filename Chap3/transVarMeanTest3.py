@@ -23,12 +23,10 @@ from socket import gethostname
 #%% Define function
 def calcAve(var):
     print('type(var);',type(var),'; var.shape:',var.shape)
-
     # Start querying stat functions
     print('var.min():'.ljust(21),var.min())
     print('var.max():'.ljust(21),var.max())
     print('np.ma.mean(var.data):',np.ma.mean(var.data)) ; # Not mask aware
-
     # Problem transientVariable.mean() function
     #print('var.mean():'.ljust(21),var.mean())
     print('-----')
@@ -40,35 +38,23 @@ f = ['/p/css03/esgf_publish/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn
 #times = [['1850','1851'],['2000','2005'],['1983','1984'],['2010','2011'],['1984','2013'],['1984','2015']]
 #times = [np.arange(1984,2015),[1984,2013]]
 #times = [np.arange(2013,2015),[1999,2014],[1984,2014]] # Try 15, then 29 years
-times = np.arange(1999,1984,-1)
+times = np.arange(1991,1984,-1)
 hostName = gethostname()
 print('host:',hostName)
 print('Python version:',sys.version)
 print('cdat env:',sys.executable.split('/')[5])
 print('cdat version:',cdat_info.version()[0])
 print('*****')
-for timeSlots in times:
+for timeSlot in times:
     for filePath in f:
         fH = cdm.open(filePath)
         print('filePath:',filePath.split('/')[-1])
-        print('Processing:',timeSlots)
         # Loop through single years
-        if len(timeSlots) > 2:
-            for time in timeSlots:
-                start = time ; end = 2014; #end = start+1
-                print('times:',start,end)
-                d1 = fH('so',time=(str(start),str(end)))
-                print("Array size: %d Mb" % ( (d1.size * d1.itemsize) / (1024*1024) ) )
-                calcAve(d1)
-                del(d1)
-        # Read 30-year time period
-        elif len(timeSlots) == 2:
-            start = timeSlots[0] ; end = 2014 ; #end = timeSlots[1]
-            print('times:',start,end)
-            d1 = fH('so',time=(str(start),str(end)))
-            print("Array size: %d Mb" % ( (d1.size * d1.itemsize) / (1024*1024) ) )
-            calcAve(d1)
-            del(d1)
-        # Close file handle
+        start = timeSlot ; end = 2014; #end = start+1
+        print('times:',start,end,'; total years:',(end-start)+1)
+        d1 = fH('so',time=(str(start),str(end)))
+        print("Array size: %d Mb" % ( (d1.size * d1.itemsize) / (1024*1024) ) )
+        calcAve(d1)
+        del(d1)
         fH.close()
     print('----- -----')
