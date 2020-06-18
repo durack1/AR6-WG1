@@ -111,6 +111,7 @@ PJD 29 Dec 2019     - Ongoing issues with CESM2* data; zero-valued arrays being 
                       NCAR.CESM2.historical.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308 (16) - zero arrays
 PJD 22 Jan 2020     - Testing for missing CMIP5 data (update call to trimModelList)
 PJD 27 Jan 2020     - Added CNRM-CM6-1-HR to exclusion list; invalid data and memory explosions
+PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
 
@@ -119,7 +120,7 @@ PJD 27 Jan 2020     - Added CNRM-CM6-1-HR to exclusion list; invalid data and me
 
 #%% Imports
 from __future__ import print_function ; # Make py2 backward compatible
-import argparse,copy,datetime,gc,glob,os,regrid2,sys,time,pdb
+import argparse,copy,datetime,gc,glob,os,regrid2,sys,time  #,pdb
 #import pdb,sys,warnings
 import cdms2 as cdm
 import cdtime as cdt
@@ -196,6 +197,7 @@ xmlPath = '/p/user_pub/xclim/' ; #'/data_crunchy_oceanonly/crunchy_work/cmip-dyn
 #%% Generate log file
 timeNow = datetime.datetime.now();
 timeFormat = timeNow.strftime("%y%m%dT%H%M%S")
+dateNow = timeNow.strftime('%y%m%d')
 logFile = os.path.join(workDir,'_'.join([timeFormat,'CMxWOA',mipEra,activityId,experimentId,variableId,'logs.txt']))
 textToWrite = ' '.join(['TIME:',timeFormat])
 writeToLog(logFile,textToWrite)
@@ -496,10 +498,10 @@ for count,filePath in enumerate(fileList):
 
     # Write out data
     modId = '.'.join(['.'.join(filePath.split('/')[-1].split('.')[:-3]),'-'.join([str(startYr),str(endYr-1),'clim']),'nc'])
-    outFMod = os.path.join(workDir,'ncs',mipEra,experimentId,'modGrid')
+    outFMod = os.path.join(workDir,'ncs',dateNow,mipEra,experimentId,'modGrid')
     outFModId = os.path.join(outFMod,modId)
     woaId = '.'.join(['.'.join(filePath.split('/')[-1].split('.')[:-3]),'-'.join([str(startYr),str(endYr-1),'woaClim']),'nc'])
-    outFWoa = os.path.join(workDir,'ncs',mipEra,experimentId,'woaGrid')
+    outFWoa = os.path.join(workDir,'ncs',dateNow,mipEra,experimentId,'woaGrid')
     outFWoaId = os.path.join(outFWoa,woaId)
     #pdb.set_trace()
 
