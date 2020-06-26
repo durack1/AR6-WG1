@@ -114,13 +114,14 @@ PJD 27 Jan 2020     - Added CNRM-CM6-1-HR to exclusion list; invalid data and me
 PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
+PJD 25 Jun 2020     - Added AWI-CM-1-1-LR to badMods list
 
 @author: durack1
 """
 
 #%% Imports
 from __future__ import print_function ; # Make py2 backward compatible
-import argparse,copy,datetime,gc,glob,os,regrid2,sys,time  #,pdb
+import argparse,copy,datetime,gc,glob,os,regrid2,sys,time
 #import pdb,sys,warnings
 import cdms2 as cdm
 import cdtime as cdt
@@ -142,12 +143,12 @@ cdm.setAutoBounds(1)
 
 #%% Initialize argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('mipEra',help='CMIP era: either CMIP3, 5, or 6')
-parser.add_argument('activityId',help='e.g. CMIP includes all DECK simulations; ScenarioMIP all projections')
-parser.add_argument('experimentId',help='e.g. historical for CMIP5/6, 20c3m for CMIP3')
-parser.add_argument('variableId',help='e.g. tas, tos, pr, sos etc')
-parser.add_argument('-r','--realm',help='ocean assumed, specify if other',default='ocean')
-parser.add_argument('-f','--frequency',help='monthly assumed, specify if other',default='mon')
+parser.add_argument('-me', '--mipEra',help='CMIP era: either CMIP3, 5, or 6',default='CMIP6')
+parser.add_argument('-a', '--activityId',help='e.g. CMIP includes all DECK simulations; ScenarioMIP all projections',default='CMIP')
+parser.add_argument('-e', '--experimentId',help='e.g. historical for CMIP5/6, 20c3m for CMIP3',default='historical')
+parser.add_argument('-v', '--variableId',help='e.g. tas, tos, pr, sos etc',default='thetao')
+parser.add_argument('-r', '--realm',help='ocean assumed, specify if other',default='ocean')
+parser.add_argument('-f', '--frequency',help='monthly assumed, specify if other',default='mon')
 args = parser.parse_args()
 
 #%% Error trapping
@@ -181,6 +182,7 @@ for var in varsToTest:
     else:
         print('Variable:',var,'unset, exiting..')
         sys.exit
+
 #%% tests
 '''
 mipEra = 'CMIP5'
@@ -258,11 +260,14 @@ woaLat      = s.getLatitude()
 woaLon      = s.getLongitude()
 woa.close()
 
+#%% Generate problem model grid list
+badMods = ['.AWI-CM-1-1-LR.','.AWI-CM-1-1-MR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']
+
 #%% Loop through files
 for count,filePath in enumerate(fileList):
     print(count,filePath)
     # Add AWI, BCC kludge - have to fix grid issue - *** TypeError: 'NoneType' object is not subscriptable
-    if any(x in filePath for x in ['.AWI-CM-1-1-MR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']):
+    if any(x in filePath for x in badMods):
         strTxt = ' '.join([str(count),'** Known grid issue with:',filePath.split('/')[-1],'skipping..**'])
         print(strTxt)
         writeToLog(logFile,strTxt)
