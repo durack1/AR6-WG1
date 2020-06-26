@@ -114,7 +114,7 @@ PJD 27 Jan 2020     - Added CNRM-CM6-1-HR to exclusion list; invalid data and me
 PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
-PJD 25 Jun 2020     - Added AWI-CM-1-1-LR to badMods list
+PJD 25 Jun 2020     - Added AWI-ESM-1-1-LR to badMods list
 
 @author: durack1
 """
@@ -261,7 +261,7 @@ woaLon      = s.getLongitude()
 woa.close()
 
 #%% Generate problem model grid list
-badMods = ['.AWI-CM-1-1-LR.','.AWI-CM-1-1-MR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']
+badMods = ['.AWI-CM-1-1-MR.','.AWI-ESM-1-1-LR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']
 
 #%% Loop through files
 for count,filePath in enumerate(fileList):
