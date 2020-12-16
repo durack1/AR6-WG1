@@ -22,6 +22,7 @@
 % PJD  7 Jan 2020   - Updated with CMIP6/5 basin plots
 % PJD  9 Jan 2020   - Updated figure numbering to 3.22
 % PJD  9 Jan 2020   - Updated figure naming with identifier (durack1)
+% PJD 14 Jul 2020   - Updated to deal with dateStamped path
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -32,6 +33,7 @@ clear, clc, close all
 % Initialise environment variables
 [homeDir,~,dataDir,obsDir,~,aHostLongname] = myMatEnv(2);
 outDir = os_path([homeDir,'190311_AR6/Chap3/']);
+dataDate = '200714';
 
 % Setup plotting scales
 ptcont1 = -2.5:2.5:30;
@@ -62,8 +64,8 @@ if purge
     delete([outDir,datestr(now,'yymmdd'),'_WOA18*.png']);
     delete([outDir,datestr(now,'yymmdd'),'_cmip*.png']);
     delete([outDir,datestr(now,'yymmdd'),'_CMIP5*.mat']);
-    delete([outDir,'ncs/CMIP*/historical/woaGrid/so/',datestr(now,'yymmdd'),'*.png']);
-    delete([outDir,'ncs/CMIP*/historical/woaGrid/thetao/',datestr(now,'yymmdd'),'*.png']);
+    delete([outDir,'ncs/',dataDate,'/CMIP*/historical/woaGrid/so/',datestr(now,'yymmdd'),'*.png']);
+    delete([outDir,'ncs/',dataDate,'/CMIP*/historical/woaGrid/thetao/',datestr(now,'yymmdd'),'*.png']);
 end
 
 %% Print time to console, for logging
@@ -357,7 +359,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM5Thetao;
-            outData = os_path([outDir,'ncs/CMIP5/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid']);
             mipEra = 'cmip5';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -367,7 +369,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM5So;
-            outData = os_path([outDir,'ncs/CMIP5/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid']);
             mipEra = 'cmip5';
             cont1 = scont1;
             cont2 = scont2;
@@ -377,7 +379,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM6Thetao;
-            outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid']);
             mipEra = 'cmip6';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -387,7 +389,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM6So;
-            outData = os_path([outDir,'ncs/CMIP6/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid']);
             mipEra = 'cmip6';
             cont1 = scont1;
             cont2 = scont2;
