@@ -236,7 +236,8 @@ fileLists.extend([varName])
 del(mip,var,searchPath,fileList,fileListTrim,varName) ; gc.collect()
 
 #%% Generate climatology periods
-climPeriod = ([1975,2006],[1984,2015])
+#climPeriod = ([1975,2006],[1984,2015]) ; # Last 30 years of historical simulations
+climPeriod = ([1975,2006],[1975,2006]) ; # Same climatological periods
 
 #%% Deal with input lists
 for count,lst in enumerate(fileLists):
