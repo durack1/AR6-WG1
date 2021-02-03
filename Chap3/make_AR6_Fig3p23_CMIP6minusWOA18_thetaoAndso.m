@@ -29,6 +29,10 @@
 % PJD  2 Feb 2021   - Added export_fig to path
 % PJD  2 Feb 2021   - Updated CMIP6 bad lists
 % PJD  2 Feb 2021   - Corrected whiteout alignments for global and basin plots
+% PJD  3 Feb 2021   - Update command test from '-r' to '-batch'
+%                   ~/apps/MATLAB/R2020b/bin/matlab -batch "cd('~/git/AR6-WG1/Chap3'); ...
+%                   make_AR6_Fig3p23_CMIP6minusWOA18_thetaoAndso;" < /dev/null > ...
+%                   /work/.../190311_AR6/Chap3/210203_1033_make_AR6_matlab9p9Upd3-detect.log
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -54,7 +58,7 @@ fonts = 7; fonts_c = 6; fonts_ax = 6; fonts_lab = 10;
 %% If running through entire script cleanup old figure files
 [command] = matlab_mode;
 disp(command)
-if ~contains(command,'-r ') % Test for interactive mode
+if ~contains(command,'-batch ') % Test for interactive mode
     purge_all = input('* Are you sure you want to purge ALL current figure files? Y/N [Y]: ','s');
     if strcmpi(purge_all,'y')
         purge = 1;
