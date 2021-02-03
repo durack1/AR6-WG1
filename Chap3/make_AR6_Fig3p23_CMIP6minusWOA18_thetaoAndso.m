@@ -23,6 +23,12 @@
 % PJD  9 Jan 2020   - Updated figure numbering to 3.22
 % PJD  9 Jan 2020   - Updated figure naming with identifier (durack1)
 % PJD 14 Jul 2020   - Updated to deal with dateStamped path
+% PJD  2 Feb 2021   - Updated to deal with latest model analyses (210130)
+% PJD  2 Feb 2021   - Updated for latest WOA18 data (210201_woa)
+% PJD  2 Feb 2021   - Updated from 3.22 to 3.23
+% PJD  2 Feb 2021   - Added export_fig to path
+% PJD  2 Feb 2021   - Updated CMIP6 bad lists
+% PJD  2 Feb 2021   - Corrected whiteout alignments for global and basin plots
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -33,7 +39,7 @@ clear, clc, close all
 % Initialise environment variables
 [homeDir,~,dataDir,obsDir,~,aHostLongname] = myMatEnv(2);
 outDir = os_path([homeDir,'190311_AR6/Chap3/']);
-dataDate = '200714';
+dataDate = '210130';
 
 % Setup plotting scales
 ptcont1 = -2.5:2.5:30;
@@ -80,7 +86,7 @@ disp([upper('AR6-WG1 hash: '),a.hash])
 clear a
 
 %% Load WOA18 data
-woaDir = os_path([obsDir,'WOD18/190312/']);
+woaDir = os_path([obsDir,'WOA18/210201_woa/']);
 infile = os_path([woaDir,'woa18_decav_t00_01.nc']);
 t_mean          = getnc(infile,'t_an');
 t_lat           = getnc(infile,'lat');
@@ -176,154 +182,91 @@ clear ax1 ax2 hh1
 disp('** WOA18 processing complete.. **')
 
 %% Declare bad lists
-badListCM6Thetao = {
-    'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190822' ; % rotated pole
-    'CNRM-CERFACS.CNRM-CM6-1-HR.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20191021' ; % mask
-    'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.thetao.ocean.glb-l-gr.v20190826' ; % mask/missing_value?
-    'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.thetao.ocean.glb-l-gr.v20190830' ; % zeros
-    'E3SM-Project.E3SM-1-0.r3i1p1f1.mon.thetao.ocean.glb-l-gr.v20190827'
-    'E3SM-Project.E3SM-1-0.r4i1p1f1.mon.thetao.ocean.glb-l-gr.v20190909'
-    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.thetao.ocean.glb-l-gr.v20191009'
-    'IPSL.IPSL-CM6A-LR.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803' ; % zeros
-    'IPSL.IPSL-CM6A-LR.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r12i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r13i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r14i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r15i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r16i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r17i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r18i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r19i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r20i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r21i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r22i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r23i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r24i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r25i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r26i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r27i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r28i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r29i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r30i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r31i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r32i1p1f1.mon.thetao.ocean.glb-l-gn.v20190802'
-    'IPSL.IPSL-CM6A-LR.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20180803'
-    'MIROC.MIROC-ES2L.r1i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823' ; % zeros
-    'MIROC.MIROC-ES2L.r2i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
-    'MIROC.MIROC-ES2L.r3i1p1f2.mon.thetao.ocean.glb-l-gn.v20190823'
-    'MRI.MRI-ESM2-0.r1i2p1f1.mon.thetao.ocean.glb-l-gn.v20191108' ; % zeros
-    'NCAR.CESM2.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20190313' ; % zeros
-    'NCAR.CESM2.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20190514'
-    'NCAR.CESM2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311' ; % depth coord?
-    'NCAR.CESM2.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2-WACCM.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808' ; % zeros
-    'NCAR.CESM2-WACCM.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
-    'NCAR.CESM2-WACCM.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
-    'NOAA-GFDL.GFDL-CM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20180701' ; % land mask/low values
-    'NOAA-GFDL.GFDL-ESM4.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190726' ; % land mask/low values
-};
 badListCM6So = {
-    'CAS.FGOALS-f3-L.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190822' ; % rotated pole
-    'CNRM-CERFACS.CNRM-CM6-1-HR.r1i1p1f2.mon.so.ocean.glb-l-gn.v20191021' ; % zeros
+    'CAS.FGOALS-f3-L.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191007' ; % rotated pole
+    'CAS.FGOALS-f3-L.r2i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
+    'CAS.FGOALS-f3-L.r3i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
+    'CAS.FGOALS-g3.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191012' ; % rotated pole
+    'CAS.FGOALS-g3.r2i1p1f1.mon.so.ocean.glb-l-gn.v20191013'
+    'CAS.FGOALS-g3.r5i1p1f1.mon.so.ocean.glb-l-gn.v20191012'
     'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.so.ocean.glb-l-gr.v20190826' ; % mask/missing values
     'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.so.ocean.glb-l-gr.v20190830'
-    'E3SM-Project.E3SM-1-0.r3i1p1f1.mon.so.ocean.glb-l-gr.v20190827'
-    'E3SM-Project.E3SM-1-0.r4i1p1f1.mon.so.ocean.glb-l-gr.v20190909'
-    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.so.ocean.glb-l-gr.v20191009'
-    'IPSL.IPSL-CM6A-LR.r10i1p1f1.mon.so.ocean.glb-l-gn.v20180803' ; % zeros
-    'IPSL.IPSL-CM6A-LR.r11i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r12i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r13i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r14i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r15i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r16i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r17i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r18i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r19i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r1i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r20i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r21i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r22i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r23i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r24i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r25i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r26i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r27i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r28i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r29i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r2i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r30i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r31i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r32i1p1f1.mon.so.ocean.glb-l-gn.v20190802'
-    'IPSL.IPSL-CM6A-LR.r3i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r4i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r5i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r6i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r7i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r8i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'IPSL.IPSL-CM6A-LR.r9i1p1f1.mon.so.ocean.glb-l-gn.v20180803'
-    'MIROC.MIROC-ES2L.r1i1p1f2.mon.so.ocean.glb-l-gn.v20190823' ; % ?
-    'MIROC.MIROC-ES2L.r2i1p1f2.mon.so.ocean.glb-l-gn.v20190823'
-    'MIROC.MIROC-ES2L.r3i1p1f2.mon.so.ocean.glb-l-gn.v20190823'
-    'NCAR.CESM2.r10i1p1f1.mon.so.ocean.glb-l-gn.v20190313' ; % zeros
-    'NCAR.CESM2.r11i1p1f1.mon.so.ocean.glb-l-gn.v20190514'
-    'NCAR.CESM2.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
+    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.so.ocean.glb-l-gr.v20200429'
+    'INM.INM-CM4-8.r1i1p1f1.mon.so.ocean.glb-l-gr1.v20190530' ; % deep structure, subsurface patchiness
+    'INM.INM-CM5-0.r1i1p1f1.mon.so.ocean.glb-l-gr1.v20190610'
+    'INM.INM-CM5-0.r2i1p1f1.mon.so.ocean.glb-l-gr1.v20190704'
+    'INM.INM-CM5-0.r3i1p1f1.mon.so.ocean.glb-l-gr1.v20190703'
+    'INM.INM-CM5-0.r4i1p1f1.mon.so.ocean.glb-l-gr1.v20190704'
+    'INM.INM-CM5-0.r5i1p1f1.mon.so.ocean.glb-l-gr1.v20190705'
+    'INM.INM-CM5-0.r6i1p1f1.mon.so.ocean.glb-l-gr1.v20190709'
+    'INM.INM-CM5-0.r7i1p1f1.mon.so.ocean.glb-l-gr1.v20190709'
+    'INM.INM-CM5-0.r8i1p1f1.mon.so.ocean.glb-l-gr1.v20190709'
+    'INM.INM-CM5-0.r9i1p1f1.mon.so.ocean.glb-l-gr1.v20190710'
+    'INM.INM-CM5-0.r10i1p1f1.mon.so.ocean.glb-l-gr1.v20190712'
+    'NCAR.CESM2.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190308' % Values extend through depth - coord issue?
     'NCAR.CESM2.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
     'NCAR.CESM2.r3i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
     'NCAR.CESM2.r4i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
     'NCAR.CESM2.r5i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
     'NCAR.CESM2.r6i1p1f1.mon.so.ocean.glb-l-gn.v20190308'
-    'NCAR.CESM2.r7i1p1f1.mon.so.ocean.glb-l-gn.v20190311' ; % depth coord
+    'NCAR.CESM2.r7i1p1f1.mon.so.ocean.glb-l-gn.v20190311'
     'NCAR.CESM2.r8i1p1f1.mon.so.ocean.glb-l-gn.v20190311'
     'NCAR.CESM2.r9i1p1f1.mon.so.ocean.glb-l-gn.v20190311'
-    'NCAR.CESM2-WACCM.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190808' ; % zeros
+    'NCAR.CESM2.r10i1p1f1.mon.so.ocean.glb-l-gn.v20190313'
+    'NCAR.CESM2.r11i1p1f1.mon.so.ocean.glb-l-gn.v20190514'
+    'NCAR.CESM2-FV2.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191120' % Values extend through depth - coord issue?
+    'NCAR.CESM2-FV2.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-FV2.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-WACCM.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190808' % Values extend through depth - coord issue?
     'NCAR.CESM2-WACCM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190808'
     'NCAR.CESM2-WACCM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20190808'
-    'NCC.NorESM2-LM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190920' ; % depth issue >1000m
-    'NOAA-GFDL.GFDL-CM4.r1i1p1f1.mon.so.ocean.glb-l-gn.v20180701' ; % zeros
-    'NOAA-GFDL.GFDL-ESM4.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190726' ; % zeros
-};
-badListCM5Thetao = {
-    'ICHEC.EC-EARTH.r10i1p1.mon.thetao.ocean.glb-l-gu.1' ; % mask
-    'ICHEC.EC-EARTH.r11i1p1.mon.thetao.ocean.glb-l-gu.v20120403'
-    'ICHEC.EC-EARTH.r12i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r14i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r5i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r6i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r7i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r9i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'INM.inmcm4.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
-    'MIROC.MIROC4h.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
-    'MIROC.MIROC4h.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'MIROC.MIROC4h.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'MIROC.MIROC5.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
-    'MIROC.MIROC5.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'MIROC.MIROC5.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'MIROC.MIROC5.r4i1p1.mon.thetao.ocean.glb-l-gu.v20120112'
-    'MIROC.MIROC5.r5i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'MRI.MRI-CGCM3.r1i1p1.mon.thetao.ocean.glb-l-gu.v20120510' ; % mask an values through depth
-    'MRI.MRI-CGCM3.r2i1p1.mon.thetao.ocean.glb-l-gu.v20120510'
-    'MRI.MRI-CGCM3.r3i1p1.mon.thetao.ocean.glb-l-gu.v20120510'
-    'MRI.MRI-CGCM3.r4i1p2.mon.thetao.ocean.glb-l-gu.v20120510'
-    'MRI.MRI-CGCM3.r5i1p2.mon.thetao.ocean.glb-l-gu.v20120510'
+    'NCAR.CESM2-WACCM-FV2.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191120' % Values extend through depth - coord issue?
+    'NCAR.CESM2-WACCM-FV2.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-WACCM-FV2.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200226'
+    'NCC.NorESM2-LM.r1i1p1f1.mon.so.ocean.glb-l-gn.v20190815' ; % Problem > 1000 m - missing value/coord issue?
+    'NCC.NorESM2-LM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20190920'
+    'NCC.NorESM2-LM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20190920'
+    'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218' ; % Problem > 1000 m - missing value/coord issue?
+    'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
     };
+badListCM6Thetao = {
+    'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191007' ; % rotated pole
+    'CAS.FGOALS-f3-L.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
+    'CAS.FGOALS-f3-L.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
+    'CAS.FGOALS-g3.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191012' ; % rotated pole
+    'CAS.FGOALS-g3.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20191012'
+    'CAS.FGOALS-g3.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20191012'
+    'E3SM-Project.E3SM-1-0.r1i1p1f1.mon.thetao.ocean.glb-l-gr.v20190826' ; % mask/missing_value?
+    'E3SM-Project.E3SM-1-0.r2i1p1f1.mon.thetao.ocean.glb-l-gr.v20190830'
+    'E3SM-Project.E3SM-1-0.r5i1p1f1.mon.thetao.ocean.glb-l-gr.v20200429'
+    'INM.INM-CM4-8.r1i1p1f1.mon.thetao.ocean.glb-l-gr1.v20190530' ; % Values over Russia/grid (same for so)
+    'NCAR.CESM2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308' % Values extend through depth - coord issue? (same for so)
+    'NCAR.CESM2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r4i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r5i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r6i1p1f1.mon.thetao.ocean.glb-l-gn.v20190308'
+    'NCAR.CESM2.r7i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
+    'NCAR.CESM2.r8i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
+    'NCAR.CESM2.r9i1p1f1.mon.thetao.ocean.glb-l-gn.v20190311'
+    'NCAR.CESM2.r10i1p1f1.mon.thetao.ocean.glb-l-gn.v20190313'
+    'NCAR.CESM2.r11i1p1f1.mon.thetao.ocean.glb-l-gn.v20190514'
+    'NCAR.CESM2-FV2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191120' % Values extend through depth AND grid/masking at surface - coord issue?
+    'NCAR.CESM2-FV2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-FV2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-WACCM.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808' % Values extend through depth - coord issue? (same for so)
+    'NCAR.CESM2-WACCM.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
+    'NCAR.CESM2-WACCM.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190808'
+    'NCAR.CESM2-WACCM-FV2.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191120' % Values extend through depth - coord issue? (same for so)
+    'NCAR.CESM2-WACCM-FV2.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20200226'
+    'NCAR.CESM2-WACCM-FV2.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20200226'
+    'NCC.NorESM2-LM.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20190815' ; % Problem > 1000 m - missing value/coord issue?
+    'NCC.NorESM2-LM.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20190920'
+    'NCC.NorESM2-LM.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20190920'
+    'NCC.NorESM2-MM.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191108' ; % Problem > 1000 m - missing value/coord issue? (same for so)
+    'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218'
+    'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
+};
 badListCM5So = {
     'ICHEC.EC-EARTH.r10i1p1.mon.so.ocean.glb-z1-gu.1' ; % mask
     'ICHEC.EC-EARTH.r11i1p1.mon.so.ocean.glb-z1-gu.v20120403'
@@ -342,13 +285,39 @@ badListCM5So = {
     'MIROC.MIROC5.r1i1p1.mon.so.ocean.glb-z1-gu.1' ; % mask an values through depth
     'MIROC.MIROC5.r2i1p1.mon.so.ocean.glb-z1-gu.1'
     'MIROC.MIROC5.r3i1p1.mon.so.ocean.glb-z1-gu.1'
-    'MIROC.MIROC5.r4i1p1.mon.so.ocean.glb-z1-gu.v20120112'
+    'MIROC.MIROC5.r4i1p1.mon.so.ocean.glb-z1-gu.1'
     'MIROC.MIROC5.r5i1p1.mon.so.ocean.glb-z1-gu.1'
     'MRI.MRI-CGCM3.r1i1p1.mon.so.ocean.glb-z1-gu.v20120510' ; % mask an values through depth
     'MRI.MRI-CGCM3.r2i1p1.mon.so.ocean.glb-z1-gu.v20120510'
     'MRI.MRI-CGCM3.r3i1p1.mon.so.ocean.glb-z1-gu.v20120510'
     'MRI.MRI-CGCM3.r4i1p2.mon.so.ocean.glb-z1-gu.v20120510'
     'MRI.MRI-CGCM3.r5i1p2.mon.so.ocean.glb-z1-gu.v20120510'
+    };
+badListCM5Thetao = {
+    'ICHEC.EC-EARTH.r10i1p1.mon.thetao.ocean.glb-l-gu.1' ; % mask
+    'ICHEC.EC-EARTH.r11i1p1.mon.thetao.ocean.glb-l-gu.v20120403'
+    'ICHEC.EC-EARTH.r12i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r14i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r5i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r6i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r7i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r9i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'INM.inmcm4.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
+    'MIROC.MIROC4h.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
+    'MIROC.MIROC4h.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MIROC.MIROC4h.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MIROC.MIROC5.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
+    'MIROC.MIROC5.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MIROC.MIROC5.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MIROC.MIROC5.r4i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MIROC.MIROC5.r5i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'MRI.MRI-CGCM3.r1i1p1.mon.thetao.ocean.glb-l-gu.v20120510' ; % mask an values through depth
+    'MRI.MRI-CGCM3.r2i1p1.mon.thetao.ocean.glb-l-gu.v20120510'
+    'MRI.MRI-CGCM3.r3i1p1.mon.thetao.ocean.glb-l-gu.v20120510'
+    'MRI.MRI-CGCM3.r4i1p2.mon.thetao.ocean.glb-l-gu.v20120510'
+    'MRI.MRI-CGCM3.r5i1p2.mon.thetao.ocean.glb-l-gu.v20120510'
     };
 
 %% Process models
@@ -359,7 +328,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM5Thetao;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid/']);
             mipEra = 'cmip5';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -369,7 +338,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM5So;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid/']);
             mipEra = 'cmip5';
             cont1 = scont1;
             cont2 = scont2;
@@ -379,7 +348,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM6Thetao;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid/']);
             mipEra = 'cmip6';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -389,12 +358,19 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM6So;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid/']);
             mipEra = 'cmip6';
             cont1 = scont1;
             cont2 = scont2;
             cont3 = scont3;
     end
+
+    % Deal with directory creation/cleanup
+    pngDir = fullfile(outData,inVarName);
+    if exist(pngDir,'dir')
+        rmdir(pngDir,'s');
+    end
+    mkdir(pngDir);
 
     % Now process
     [~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
@@ -464,7 +440,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
         'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
         'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
-        export_fig([outData,'/',inVarName,'/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
+        export_fig([pngDir,'/',datestr(now,'yymmdd'),'_',tmp1name],'-png')
         close all
         clear handle ax1 ax2 hh1 tmp1 ind tmp1name
 
@@ -487,7 +463,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
         set(ax2,'Tickdir','out','fontsize',fonts_ax,'layer','top','box','on', ...
         'ylim',[0 5500],'ytick',0:500:5500,'yticklabel',{'0','500','1000','1500','2000','2500','3000','3500','4000','4500','5000','5500'},'yminort','on', ...
         'xlim',[-90 90],'xtick',-90:20:90,'xticklabel',{'-90','-70','-50','-30','-10','10','30','50','70','90'},'xminort','on');
-        export_fig([outData,'/',inVarName,'/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
+        export_fig([pngDir,'/',datestr(now,'yymmdd'),'_',tmp2name],'-png');
         close all
         clear handle ax1 ax2 hh1 tmp2 tmp2name
 
@@ -649,7 +625,7 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
                                                                      't_depth','t_lat','t_lon');
 disp('** All data written to *.mat.. **')
 
-%% Figure 3.22 global - thetao and so clim vs WOA18
+%% Figure 3.23 global - thetao and so clim vs WOA18
 close all
 % Determine depth split
 depth1 = find(t_depth == 1000);
@@ -748,7 +724,8 @@ for mipEra = 1:2
     set(hh4,'Position',[0.555 0.042 0.410 0.015],'fontsize',fonts);
 
     % Drop blanking mask between upper and lower panels
-    axr1 = axes('Position',[0.0475 0.57061 0.95 0.01],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr1 = axes('Position',[0.0475 0.57061 0.95 0.01],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr1 = axes('Position',[0.0475 0.575 0.95 0.004],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
 
     % Axis labels
     set(ylab1,'Position',[-106 1000 1.0001]);
@@ -756,14 +733,14 @@ for mipEra = 1:2
     set(xlab4,'Position',[0 5600 1.0001]);
 
     % Print to file
-    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-png')
-    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_global'],'-eps')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p23_',mipEraId,'minusWOA18_thetaoAndso_global'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p23_',mipEraId,'minusWOA18_thetaoAndso_global'],'-eps')
 
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
 end
 
-%% Figure 3.22 basins - thetao and so clim vs WOA18
+%% Figure 3.23 basins - thetao and so clim vs WOA18
 close all
 % Load basin mask
 infile = os_path([homeDir,'code/make_basins.mat']);
@@ -996,13 +973,17 @@ for mipEra = 1:2
 
     % Drop blanking mask between upper and lower panels
     rowHeight = rowHeight-.004; %.876
-    axr1 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr1 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr1 = axes('Position',[0.07 rowHeight+.001 0.95 0.002],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
     rowHeight = rowHeight-axHeight*2-.015; %.645
-    axr2 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr2 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr2 = axes('Position',[0.07 rowHeight+.001 0.95 0.002],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
     rowHeight = rowHeight-axHeight*2-.015; %.41
-    axr3 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr3 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr3 = axes('Position',[0.07 rowHeight+.001 0.95 0.002],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
     rowHeight = rowHeight-axHeight*2-.015; %.175
-    axr4 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    %axr4 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
+    axr4 = axes('Position',[0.07 rowHeight+.001 0.95 0.002],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
                                  %0.875      0.004
     % Axis labels
     xPos = -110; yPos = 1000;
@@ -1014,8 +995,8 @@ for mipEra = 1:2
     set(xlab16,'Position',[0 5686 1.0001]);
 
     % Print to file
-    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-png')
-    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p22_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-eps')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p23_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-png')
+    export_fig([outDir,datestr(now,'yymmdd'),'_durack1_AR6WG1_Ch3_Fig3p23_',mipEraId,'minusWOA18_thetaoAndso_basin'],'-eps')
 
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
