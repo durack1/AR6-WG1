@@ -8,6 +8,7 @@ Paul J. Durack 15th December 2020
 This script pulls and pools zostoga output for Ch3
 
 PJD 16 Dec 2020 - Finalized with zip archive
+PJD  5 Feb 2021 - Updated to remove existing archive if it exists
 
 @author: durack1
 """
@@ -90,6 +91,8 @@ for count, filepath in enumerate(filePathsKeep):
 #%% Zip up for distribution
 zipFile = '_'.join([timeFormat, 'CMIP6-CMIP-DAMIP-zostoga'])
 zipFile = os.path.join(targetDirComp, zipFile)
-os.remove('.'.join([zipFile,'zip']))
+zipFileExt = '.'.join([zipFile,'zip'])
+if os.path.exists(zipFileExt):
+    os.remove(zipFileExt)
 print('zipFile:', zipFile)
 make_archive(zipFile, 'zip', '.', '.')
