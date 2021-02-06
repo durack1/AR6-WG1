@@ -9,11 +9,12 @@ This script pulls and pools zostoga output for Ch3
 
 PJD 16 Dec 2020 - Finalized with zip archive
 PJD  5 Feb 2021 - Updated to remove existing archive if it exists
+PJD  5 Feb 2021 - Add tmp file migration to persistent workDir
 
 @author: durack1
 """
-import datetime, glob, os, re
-from shutil import copytree, make_archive, rmtree
+import datetime, glob, os, pdb, re
+from shutil import copytree, make_archive, move, rmtree
 
 #%% Setup inputs
 exps = {}
@@ -90,9 +91,16 @@ for count, filepath in enumerate(filePathsKeep):
 
 #%% Zip up for distribution
 zipFile = '_'.join([timeFormat, 'CMIP6-CMIP-DAMIP-zostoga'])
-zipFile = os.path.join(targetDirComp, zipFile)
-zipFileExt = '.'.join([zipFile,'zip'])
+zipFilePath = os.path.join(targetDirComp, zipFile)
+zipFileExt = '.'.join([zipFilePath,'zip'])
 if os.path.exists(zipFileExt):
     os.remove(zipFileExt)
-print('zipFile:', zipFile)
-make_archive(zipFile, 'zip', '.', '.')
+print('zipFile:', zipFilePath)
+make_archive(zipFilePath, 'zip', '.', '.')
+
+#%% Move to Chap3 directory
+workDir = '/work/durack1/Shared/190311_AR6/Chap3'
+pdb.set_trace()
+zipFileExtMoved = os.path.join(workDir,'.'.join([zipFile,'zip']))
+print('zipFileExtMoved:',zipFileExtMoved)
+move(zipFileExt,zipFileExtMoved)
