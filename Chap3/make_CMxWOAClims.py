@@ -115,13 +115,14 @@ PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
 PJD 25 Jun 2020     - Added AWI-ESM-1-1-LR to badMods list
+PJD  6 Feb 2021     - Updated to take years as args, add years to timeFormat-start-end dir
 
 @author: durack1
 """
 
 #%% Imports
 from __future__ import print_function ; # Make py2 backward compatible
-import argparse,copy,datetime,gc,glob,os,regrid2,sys,time
+import argparse, copy, datetime, gc, glob, os, re, regrid2, sys, time
 #import pdb,sys,warnings
 import cdms2 as cdm
 import cdtime as cdt
@@ -143,12 +144,13 @@ cdm.setAutoBounds(1)
 
 #%% Initialize argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-me', '--mipEra',help='CMIP era: either CMIP3, 5, or 6',default='CMIP6')
-parser.add_argument('-a', '--activityId',help='e.g. CMIP includes all DECK simulations; ScenarioMIP all projections',default='CMIP')
-parser.add_argument('-e', '--experimentId',help='e.g. historical for CMIP5/6, 20c3m for CMIP3',default='historical')
-parser.add_argument('-v', '--variableId',help='e.g. tas, tos, pr, sos etc',default='thetao')
-parser.add_argument('-r', '--realm',help='ocean assumed, specify if other',default='ocean')
-parser.add_argument('-f', '--frequency',help='monthly assumed, specify if other',default='mon')
+parser.add_argument('-me', '--mipEra',help='CMIP era: either CMIP3, 5, or 6', default='CMIP6')
+parser.add_argument('-a', '--activityId',help='e.g. CMIP includes all DECK simulations; ScenarioMIP all projections', default='CMIP')
+parser.add_argument('-e', '--experimentId',help='e.g. historical for CMIP5/6, 20c3m for CMIP3', default='historical')
+parser.add_argument('-v', '--variableId',help='e.g. tas, tos, pr, sos etc', default='thetao')
+parser.add_argument('-r', '--realm',help='ocean assumed, specify if other', default='ocean')
+parser.add_argument('-f', '--frequency',help='monthly assumed, specify if other', default='mon')
+parser.add_argument('-t', '--times', help='years for climatology calculation (format 1975,2015)', default='1975,2016')
 args = parser.parse_args()
 
 #%% Error trapping
@@ -182,6 +184,30 @@ for var in varsToTest:
     else:
         print('Variable:',var,'unset, exiting..')
         sys.exit
+# Test for start/end years
+pattern = re.compile('^\d{4},\d{4}$')
+if args.times == 'piControl':
+    startYr = 'piControlEnd-30'
+    endYr = 'piControlEnd'
+    print('startYr:',startYr,'endYr:',endYr)
+elif args.times != '1975,2016' and pattern.match(args.times): # And 4,4 ^\d{4},\d{4}$
+    print('args.times:',args.times)
+    startYr = args.times.split(',')[0]
+    endYr = args.times.split(',')[-1]
+    print('startYr:',startYr,'endYr:',endYr)
+    # Test start/end years for experiments
+    if mipEra == 'CMIP5':
+        if experimentId = 'historical':
+#            1860 < startYr > 2006
+#            2006 < startYr > 1860
+        elif activityId = 'ScenarioMIP':
+#            1860 < startYr > 2015
+#            2015 < startYr > 2101
+else:
+    startYr = 1975
+    endYr = 2016
+    print('Default - startYr:',startYr,'endYr:',endYr)
+sys.exit()
 
 #%% tests
 '''
