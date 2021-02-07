@@ -115,7 +115,8 @@ PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Update durolib to work with py3
                     - TODO: Generate basin masks for each input
 PJD 25 Jun 2020     - Added AWI-ESM-1-1-LR to badMods list
-PJD  6 Feb 2021     - Updated to take years as args, add years to timeFormat-start-end dir
+PJD  7 Feb 2021     - Updated to take years as args, add years to timeFormat-start-end dir
+PJD  7 Feb 2021     - Added HadGEM3-GC31-MM to badMods list - too much memory
 
 @author: durack1
 """
@@ -164,7 +165,7 @@ if args.mipEra in ['CMIP5','CMIP6']:
 if args.activityId in ['CMIP','ScenarioMIP']:
     activityId = args.activityId
     print('activityId:',activityId)
-if args.experimentId in ['historical']:
+if args.experimentId in ['historical', 'piControl']:
     experimentId = args.experimentId
     print('experimentId:',experimentId)
 if args.realm in ['ocean']:
@@ -185,29 +186,46 @@ for var in varsToTest:
         print('Variable:',var,'unset, exiting..')
         sys.exit
 # Test for start/end years
-pattern = re.compile('^\d{4},\d{4}$')
-if args.times == 'piControl':
-    startYr = 'piControlEnd-30'
-    endYr = 'piControlEnd'
-    print('startYr:',startYr,'endYr:',endYr)
-elif args.times != '1975,2016' and pattern.match(args.times): # And 4,4 ^\d{4},\d{4}$
-    print('args.times:',args.times)
-    startYr = args.times.split(',')[0]
-    endYr = args.times.split(',')[-1]
+pattern = re.compile('^piControl,\d{2,3}$')
+print('args.times:',args.times)
+if pattern.match(args.times) and experimentId == 'piControl':
+    startYrStr = 'piControl'
+    endYrStr = args.times.split(',')[-1]
+    print('piControl - startYr:',startYrStr,'endYr:',endYrStr)
+elif args.times != '1975,2016' and re.match('^\d{4},\d{4}$',args.times): # And 4,4 ^\d{4},\d{4}$
+    startYr = int(args.times.split(',')[0])
+    endYr = int(args.times.split(',')[-1])
     print('startYr:',startYr,'endYr:',endYr)
     # Test start/end years for experiments
     if mipEra == 'CMIP5':
-        if experimentId = 'historical':
-#            1860 < startYr > 2006
-#            2006 < startYr > 1860
-        elif activityId = 'ScenarioMIP':
-#            1860 < startYr > 2015
-#            2015 < startYr > 2101
-else:
+        if experimentId == 'historical':
+            if not 1860 < startYr < 2006:
+                print('startYr CMIP5 historical:',startYr,'out of range, exiting')
+            if not 1860 < endYr < 2007:
+                print('endYr CMIP5 historical:',endYr,'out of range, exiting')
+        elif activityId == 'ScenarioMIP':
+            if not 2006 < startYr < 2100:
+                print('startYr CMIP5 ScenarioMIP:',startYr,'out of range, exiting')
+            if not 2006 < endYr < 2101:
+                print('endYr CMIP5 ScenarioMIP:',endYr,'out of range, exiting')
+    elif mipEra == 'CMIP6':
+        if experimentId == 'historical':
+            if not 1860 < startYr < 2015:
+                print('startYr CMIP6 historical:',startYr,'out of range, exiting')
+            if not 1860 < endYr < 2016:
+                print('endYr CMIP6 historical:',endYr,'out of range, exiting')
+        elif activityId == 'ScenarioMIP':
+            if not 2006 < startYr < 2100:
+                print('startYr CMIP6 ScenarioMIP:',startYr,'out of range, exiting')
+            if not 2006 < endYr < 2101:
+                print('endYr CMIP6 ScenarioMIP:',endYr,'out of range, exiting')
+elif experimentId == 'historical':
     startYr = 1975
     endYr = 2016
     print('Default - startYr:',startYr,'endYr:',endYr)
-sys.exit()
+else:
+    print('Experiment bounds undefined, exiting..')
+    sys.exit
 
 #%% tests
 '''
@@ -223,10 +241,14 @@ workDir = '/work/durack1/Shared/190311_AR6/Chap3'
 xmlPath = '/p/user_pub/xclim/' ; #'/data_crunchy_oceanonly/crunchy_work/cmip-dyn'
 
 #%% Generate log file
+if experimentId == 'piControl':
+    experimentIdStartEndYrs = '-'.join([experimentId,''.join(['last',endYrStr])])
+else:
+    experimentIdStartEndYrs = '-'.join([experimentId,str(startYr),str(endYr)])
 timeNow = datetime.datetime.now();
 timeFormat = timeNow.strftime("%y%m%dT%H%M%S")
 dateNow = timeNow.strftime('%y%m%d')
-logFile = os.path.join(workDir,'_'.join([timeFormat,'CMxWOA',mipEra,activityId,experimentId,variableId,'logs.txt']))
+logFile = os.path.join(workDir,'_'.join([timeFormat,'CMxWOA',mipEra,activityId,experimentIdStartEndYrs,variableId,'logs.txt']))
 textToWrite = ' '.join(['TIME:',timeFormat])
 writeToLog(logFile,textToWrite)
 pypid = str(os.getpid()) ; # Returns calling python instance, so master also see os.getppid() - Parent
@@ -261,10 +283,6 @@ vars()[varName] = fileListTrim
 fileLists.extend([varName])
 del(mip,var,searchPath,fileList,fileListTrim,varName) ; gc.collect()
 
-#%% Generate climatology periods
-#climPeriod = ([1975,2006],[1984,2015]) ; # Last 30 years of historical simulations
-climPeriod = ([1975,2006],[1975,2006]) ; # Same climatological periods
-
 #%% Deal with input lists
 for count,lst in enumerate(fileLists):
     if count == 0:
@@ -288,7 +306,7 @@ woaLon      = s.getLongitude()
 woa.close()
 
 #%% Generate problem model grid list
-badMods = ['.AWI-CM-1-1-MR.','.AWI-ESM-1-1-LR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.']
+badMods = ['.AWI-CM-1-1-MR.','.AWI-ESM-1-1-LR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.','HadGEM3-GC31-MM']
 
 #%% Loop through files
 for count,filePath in enumerate(fileList):
@@ -302,17 +320,6 @@ for count,filePath in enumerate(fileList):
     writeToLog(logFile,' '.join([str(count),filePath]))
     var = filePath.split('/')[-2]
     mipEra = filePath.split('/')[4]
-    # Generate climatological period
-    if mipEra == 'CMIP5':
-        startYr = climPeriod[0][0]
-        startYrCt = cdt.comptime(startYr)
-        endYr = climPeriod[0][1]
-        endYrCt   = cdt.comptime(endYr)
-    elif mipEra == 'CMIP6':
-        startYr = climPeriod[1][0]
-        startYrCt = cdt.comptime(startYr)
-        endYr = climPeriod[1][1]
-        endYrCt   = cdt.comptime(endYr)
     #print('open file')
     fH = cdm.open(filePath)
     mntPathStr = ' '.join(['Mount path:',fH.directory])
@@ -360,6 +367,18 @@ for count,filePath in enumerate(fileList):
     #pdb.set_trace()
     startYrChk = timeCheck.asComponentTime()[0].year
     endYrChk = timeCheck.asComponentTime()[-1].year
+
+    # Deal with case of piControl
+    if experimentId == 'piControl':
+        startYr = endYrChk-int(endYrStr) # Take climatological period from last year
+        endYr = endYrChk+1 # Pad so last year is included fully
+        print('piControl, startYr:',startYr,'endYr:',endYr)
+
+    print('startYr:',startYr,type(startYr),'endYr:  ',endYr,type(endYr))
+    # Generate climatological period (now provided as args)
+    startYrCt = cdt.comptime(startYr)
+    endYrCt   = cdt.comptime(endYr)
+
     # Test
     if (endYrChk < endYrCt.year-1) or (startYrChk > startYrCt.year):
         # Skip file and go to next, note 2006-1 to give 2005 coverage
@@ -375,6 +394,9 @@ for count,filePath in enumerate(fileList):
     print('var:',var)
     print('startYrCt:',startYrCt)
     print('endYrCt:  ',endYrCt)
+    ###test
+    ###continue
+
     d1 = fH(var,time=(startYrCt,endYrCt,'con'))
     '''
     print('d1.max:',d1.max())
@@ -530,10 +552,10 @@ for count,filePath in enumerate(fileList):
 
     # Write out data
     modId = '.'.join(['.'.join(filePath.split('/')[-1].split('.')[:-3]),'-'.join([str(startYr),str(endYr-1),'clim']),'nc'])
-    outFMod = os.path.join(workDir,'ncs',dateNow,mipEra,experimentId,'modGrid')
+    outFMod = os.path.join(workDir,'ncs',dateNow,mipEra,experimentIdStartEndYrs,'modGrid')
     outFModId = os.path.join(outFMod,modId)
     woaId = '.'.join(['.'.join(filePath.split('/')[-1].split('.')[:-3]),'-'.join([str(startYr),str(endYr-1),'woaClim']),'nc'])
-    outFWoa = os.path.join(workDir,'ncs',dateNow,mipEra,experimentId,'woaGrid')
+    outFWoa = os.path.join(workDir,'ncs',dateNow,mipEra,experimentIdStartEndYrs,'woaGrid')
     outFWoaId = os.path.join(outFWoa,woaId)
     #pdb.set_trace()
 
