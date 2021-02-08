@@ -116,7 +116,9 @@ PJD 18 Jun 2020     - Added dateNow to deal with changes through timestepping
                     - TODO: Generate basin masks for each input
 PJD 25 Jun 2020     - Added AWI-ESM-1-1-LR to badMods list
 PJD  7 Feb 2021     - Updated to take years as args, add years to timeFormat-start-end dir
-PJD  7 Feb 2021     - Added HadGEM3-GC31-MM to badMods list - too much memory
+PJD  7 Feb 2021     - Added HadGEM3-GC31-MM to big/BadMods list - too much memory
+PJD  8 Feb 2021     - Added CMCC.CMCC-CM2-HR4 to big/badMods list, IITM-ESM to badMods
+PJD  8 Feb 2021     - Updated to take dateForced as arg, add to existing directories
 
 @author: durack1
 """
@@ -152,6 +154,7 @@ parser.add_argument('-v', '--variableId',help='e.g. tas, tos, pr, sos etc', defa
 parser.add_argument('-r', '--realm',help='ocean assumed, specify if other', default='ocean')
 parser.add_argument('-f', '--frequency',help='monthly assumed, specify if other', default='mon')
 parser.add_argument('-t', '--times', help='years for climatology calculation (format 1975,2015)', default='1975,2016')
+parser.add_argument('-df', '--dateForced', help='impose date for outDir (format 210208)', default=datetime.datetime.now().strftime('%y%m%d'))
 args = parser.parse_args()
 
 #%% Error trapping
@@ -225,7 +228,20 @@ elif experimentId == 'historical':
     print('Default - startYr:',startYr,'endYr:',endYr)
 else:
     print('Experiment bounds undefined, exiting..')
-    sys.exit
+    sys.exit()
+# Test for dateForced
+pattern = re.compile('^\d{6}$')
+if args.dateForced != datetime.datetime.now().strftime('%y%m%d'):
+    if not pattern.match(args.dateForced):
+        print('not args.dateForced:',args.dateForced)
+        print('Invalid dateForced arg, exiting..')
+        sys.exit()
+    else:
+        print('args.dateForced:',args.dateForced)
+        dateNow = args.dateForced
+
+#sys.exit()
+
 
 #%% tests
 '''
@@ -247,7 +263,12 @@ else:
     experimentIdStartEndYrs = '-'.join([experimentId,str(startYr),str(endYr)])
 timeNow = datetime.datetime.now();
 timeFormat = timeNow.strftime("%y%m%dT%H%M%S")
-dateNow = timeNow.strftime('%y%m%d')
+# Test for function arg
+if 'dateNow' in locals():
+    print('exists dateNow:',dateNow)
+else:
+    dateNow = timeNow.strftime('%y%m%d')
+    print('dateNow:',dateNow)
 logFile = os.path.join(workDir,'_'.join([timeFormat,'CMxWOA',mipEra,activityId,experimentIdStartEndYrs,variableId,'logs.txt']))
 textToWrite = ' '.join(['TIME:',timeFormat])
 writeToLog(logFile,textToWrite)
@@ -306,7 +327,8 @@ woaLon      = s.getLongitude()
 woa.close()
 
 #%% Generate problem model grid list
-badMods = ['.AWI-CM-1-1-MR.','.AWI-ESM-1-1-LR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.','HadGEM3-GC31-MM']
+badMods = ['.AWI-CM-1-1-MR.','.AWI-ESM-1-1-LR.','.bcc-csm1-1.','.bcc-csm1-1-m.','.BCC-CSM2-MR.','.BCC-ESM1.','.CNRM-CM6-1-HR.','HadGEM3-GC31-MM','.CMCC.CMCC-CM2-HR4.','.IITM-ESM.']
+bigMods = {'HadGEM3-GC31-MM':(1980, 75, 1205, 1440),'.CMCC.CMCC-CM2-HR4.':(1980, 50, 1051, 1442)}
 
 #%% Loop through files
 for count,filePath in enumerate(fileList):

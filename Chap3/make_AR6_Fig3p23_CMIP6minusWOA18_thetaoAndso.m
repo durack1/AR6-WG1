@@ -33,6 +33,7 @@
 %                   ~/apps/MATLAB/R2020b/bin/matlab -batch "cd('~/git/AR6-WG1/Chap3'); ...
 %                   make_AR6_Fig3p23_CMIP6minusWOA18_thetaoAndso;" < /dev/null > ...
 %                   /work/.../190311_AR6/Chap3/210203_1033_make_AR6_matlab9p9Upd3-detect.log
+% PJD  7 Feb 2021   - Updated to use 1981-2010 WOA18 climatology as baseline
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -90,13 +91,16 @@ disp([upper('AR6-WG1 hash: '),a.hash])
 clear a
 
 %% Load WOA18 data
-woaDir = os_path([obsDir,'WOA18/210201_woa/']);
-infile = os_path([woaDir,'woa18_decav_t00_01.nc']);
+%woaDir = os_path([obsDir,'WOA18/210201_woa/']); % decav 1955-2017 averaged decades
+%infile = os_path([woaDir,'woa18_decav_t00_01.nc']);
+woaDir = os_path([obsDir,'WOA18/210206_woa81B0/']);
+infile = os_path([woaDir,'woa18_decav81B0_t00_01.nc']);
 t_mean          = getnc(infile,'t_an');
 t_lat           = getnc(infile,'lat');
 t_lon           = getnc(infile,'lon');
 t_depth         = getnc(infile,'depth'); clear infile
-infile = os_path([woaDir,'woa18_decav_s00_01.nc']);
+%infile = os_path([woaDir,'woa18_decav_s00_01.nc']);
+infile = os_path([woaDir,'woa18_decav81B0_s00_01.nc']);
 s_mean          = getnc(infile,'s_an'); clear infile
 
 % Convert lat to 0 to 360 and flip grids
@@ -610,7 +614,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
 end
 disp('** Model processing complete.. **')
 
-%% Save WOA18 and CMIP6 ensemble matrices to file
+%% Save WOA18 and CMIP5/6 ensemble matrices to file
 % Rename obs
 so_woa18_mean = s_mean; clear s_mean
 so_woa18_mean_zonal = s_mean_zonal; clear s_mean_zonal
@@ -628,6 +632,9 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
                                                                      'so_cmip5_mean_zonal','thetao_cmip5_mean_zonal', ...
                                                                      't_depth','t_lat','t_lon');
 disp('** All data written to *.mat.. **')
+
+%% Or load WOA18 and CMIP5/6 ensemble matrices from saved file
+load 210203_CMIP5And6andWOA18_thetaoAndso.mat
 
 %% Figure 3.23 global - thetao and so clim vs WOA18
 close all
@@ -975,6 +982,44 @@ for mipEra = 1:2
     set(ax1,'Position',[0.08 rowHeight axWidth axHeight]);
     set(ax2,'Position',[0.547 rowHeight axWidth axHeight]);
 
+    % Drop data info into Indian salinity blank
+    indVarLab = [90 -3500];
+    woaSplit = split(woaDir,'/'); woaStrTmp = strrep(woaSplit(7),'_','\_');
+    %disp(['woaStrTmp:',woaStrTmp])
+    if contains(woaStrTmp,'81B0')
+        woaStr = {'WOA18', ...
+                  woaStrTmp, ...
+                  '1981-2010'};
+    else
+        woaStr = {'WOA18', ...
+                  woaStrTmp, ...
+                  '1955-2017'};
+    end
+    %disp(['woaStr:',woaStr])
+    %disp(['woa:',{'WOA18',woaStr}])
+    yax = indVarLab(2);
+    for x = 1:length(woaStr)
+        yax = yax+500; disp(['yax:',num2str(yax),' ',woaStr{x}])
+        text(indVarLab(1),yax,woaStr{x},'fontsize',fonts_ax,'horizontalAlignment','right','color','k','fontweight','b');
+    end
+    if mipEra == 1
+        cmipStr = {'CMIP5', ...
+                   'historical', ...
+                  ['thetao: n=',num2str(length(thetao_cmip5_modelNames))], ...
+                  ['so: n=',num2str(length(so_cmip5_modelNames))]};
+    else
+        cmipStr = {'CMIP6', ...
+                   'historical', ...
+                  ['thetao: n=',num2str(length(thetao_cmip6_modelNames))], ...
+                  ['so: n=',num2str(length(so_cmip6_modelNames))]};
+    end
+    %disp(['cmip:',cmipStr])
+    yax = yax+500;
+    for x = 1:length(cmipStr)
+        yax = yax+500; disp(['yax:',num2str(yax),' ',cmipStr{x}])
+        text(indVarLab(1),yax,cmipStr{x},'fontsize',fonts_ax,'horizontalAlignment','right','color','k','fontweight','b');
+    end
+
     % Drop blanking mask between upper and lower panels
     rowHeight = rowHeight-.004; %.876
     %axr1 = axes('Position',[0.07 rowHeight 0.95 0.003],'xtick',[],'ytick',[],'box','off','visible','on','xcolor',[1 1 1],'ycolor',[1 1 1]);
@@ -1004,4 +1049,4 @@ for mipEra = 1:2
 
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
-end
+end %for mipEra
