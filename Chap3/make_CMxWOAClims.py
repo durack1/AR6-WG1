@@ -119,6 +119,7 @@ PJD  7 Feb 2021     - Updated to take years as args, add years to timeFormat-sta
 PJD  7 Feb 2021     - Added HadGEM3-GC31-MM to big/BadMods list - too much memory
 PJD  8 Feb 2021     - Added CMCC.CMCC-CM2-HR4 to big/badMods list, IITM-ESM to badMods
 PJD  8 Feb 2021     - Updated to take dateForced as arg, add to existing directories
+PJD 17 Feb 2021     - Added outfile path to log/screen
 
 @author: durack1
 """
@@ -586,6 +587,11 @@ for count,filePath in enumerate(fileList):
         os.remove(outFModId)
     if not os.path.exists(outFMod):
         os.makedirs(outFMod)
+    # Print outfile to screen and logfile
+    outFModIdStr = ' '.join(['outFModId:',outFModId])
+    print(outFModIdStr)
+    writeToLog(logFile,outFModIdStr)
+    # Open file to write
     modIdH = cdm.open(outFModId,'w')
     # Copy across global attributes from source file - do this first, then write again so new info overwrites
     for i,key in enumerate(fH.attributes.keys()):
