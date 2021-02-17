@@ -240,9 +240,6 @@ if args.dateForced != datetime.datetime.now().strftime('%y%m%d'):
         print('args.dateForced:',args.dateForced)
         dateNow = args.dateForced
 
-#sys.exit()
-
-
 #%% tests
 '''
 mipEra = 'CMIP5'
