@@ -388,6 +388,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
     mkdir(pngDir);
 
     % Now process
+    disp([mipEra,' ',inVarName,' starting..'])
     [~, models] = unix(['\ls -1 ',outData,inVar,'*woaClim.nc']);
     models = strtrim(models);
     temp = regexp(models,'\n','split'); clear models status
