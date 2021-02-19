@@ -120,6 +120,7 @@ PJD  7 Feb 2021     - Added HadGEM3-GC31-MM to big/BadMods list - too much memor
 PJD  8 Feb 2021     - Added CMCC.CMCC-CM2-HR4 to big/badMods list, IITM-ESM to badMods
 PJD  8 Feb 2021     - Updated to take dateForced as arg, add to existing directories
 PJD 17 Feb 2021     - Added outfile path to log/screen
+PJD 18 Feb 2021     - Updated to include times format for piControl example
 
 @author: durack1
 """
@@ -154,7 +155,7 @@ parser.add_argument('-e', '--experimentId',help='e.g. historical for CMIP5/6, 20
 parser.add_argument('-v', '--variableId',help='e.g. tas, tos, pr, sos etc', default='thetao')
 parser.add_argument('-r', '--realm',help='ocean assumed, specify if other', default='ocean')
 parser.add_argument('-f', '--frequency',help='monthly assumed, specify if other', default='mon')
-parser.add_argument('-t', '--times', help='years for climatology calculation (format 1975,2015)', default='1975,2016')
+parser.add_argument('-t', '--times', help='years for climatology calculation (format: 1975,2015 or piControl,30 [last 30 years of sim])', default='1975,2016')
 parser.add_argument('-df', '--dateForced', help='impose date for outDir (format 210208)', default=datetime.datetime.now().strftime('%y%m%d'))
 args = parser.parse_args()
 

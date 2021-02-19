@@ -5,6 +5,7 @@
 %
 % make_AR5_Chap9ModelEval.m
 
+%{
 % PJD 29 Dec 2019   - Renamed from ../120711_AR5/Chap09/make_AR5_Fig9p13_CMIP5minusWOA09_thetaoAndso.m and updated input
 % PJD 29 Dec 2019   - Updated from WOA09 to WOD/A18 obs data
 % PJD 29 Dec 2019   - Added getGitInfo for export_fig hash
@@ -23,6 +24,7 @@
 % PJD  9 Jan 2020   - Updated figure numbering to 3.22
 % PJD  9 Jan 2020   - Updated figure naming with identifier (durack1)
 % PJD 14 Jul 2020   - Updated to deal with dateStamped path
+%}
 % PJD  2 Feb 2021   - Updated to deal with latest model analyses (210130)
 % PJD  2 Feb 2021   - Updated for latest WOA18 data (210201_woa)
 % PJD  2 Feb 2021   - Updated from 3.22 to 3.23
