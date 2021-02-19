@@ -37,6 +37,7 @@
 %                   /work/.../190311_AR6/Chap3/210203_1033_make_AR6_matlab9p9Upd3-detect.log
 % PJD  7 Feb 2021   - Updated to use 1981-2010 WOA18 climatology as baseline
 % PJD 18 Feb 2021   - Updated to use 210217 runs, with complete file set (same count at 210130)
+% PJD 18 Feb 2021   - Updated outData to reflect new exp-startYr-endYr format
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -342,7 +343,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM5Thetao;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical-1981-2006/woaGrid/']);
             mipEra = 'cmip5';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -352,7 +353,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM5So;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical-1981-2006/woaGrid/']);
             mipEra = 'cmip5';
             cont1 = scont1;
             cont2 = scont2;
@@ -362,7 +363,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'thetao';
             ncVar = 'thetao_mean_WOAGrid';
             badList = badListCM6Thetao;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical-1981-2011/woaGrid/']);
             mipEra = 'cmip6';
             cont1 = ptcont1;
             cont2 = ptcont2;
@@ -372,7 +373,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             inVarName = 'so';
             ncVar = 'so_mean_WOAGrid';
             badList = badListCM6So;
-            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical/woaGrid/']);
+            outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical-1981-2011/woaGrid/']);
             mipEra = 'cmip6';
             cont1 = scont1;
             cont2 = scont2;
