@@ -3,7 +3,7 @@
 %
 % Paul J. Durack 7th January 2011
 %
-% make_AR5_Chap9ModelEval.m
+% make_AR6_Fig3p23_CMIP6minusWOA18_thetaoAndso.m
 
 %{
 % PJD 29 Dec 2019   - Renamed from ../120711_AR5/Chap09/make_AR5_Fig9p13_CMIP5minusWOA09_thetaoAndso.m and updated input
@@ -36,17 +36,17 @@
 %                   make_AR6_Fig3p23_CMIP6minusWOA18_thetaoAndso;" < /dev/null > ...
 %                   /work/.../190311_AR6/Chap3/210203_1033_make_AR6_matlab9p9Upd3-detect.log
 % PJD  7 Feb 2021   - Updated to use 1981-2010 WOA18 climatology as baseline
+% PJD 18 Feb 2021   - Updated to use 210217 runs, with complete file set (same count at 210130)
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
-
 
 % Cleanup workspace and command window
 clear, clc, close all
 % Initialise environment variables
 [homeDir,~,dataDir,obsDir,~,aHostLongname] = myMatEnv(2);
 outDir = os_path([homeDir,'190311_AR6/Chap3/']);
-dataDate = '210130';
+dataDate = '210217';
 
 % Setup plotting scales
 ptcont1 = -2.5:2.5:30;
@@ -95,7 +95,7 @@ clear a
 %% Load WOA18 data
 %woaDir = os_path([obsDir,'WOA18/210201_woa/']); % decav 1955-2017 averaged decades
 %infile = os_path([woaDir,'woa18_decav_t00_01.nc']);
-woaDir = os_path([obsDir,'WOA18/210206_woa81B0/']);
+woaDir = os_path([obsDir,'WOA18/210206_woa81B0/']); % 1981-2010 averaged climatology
 infile = os_path([woaDir,'woa18_decav81B0_t00_01.nc']);
 t_mean          = getnc(infile,'t_an');
 t_lat           = getnc(infile,'lat');
@@ -192,7 +192,8 @@ clear ax1 ax2 hh1
 disp('** WOA18 processing complete.. **')
 
 %% Declare bad lists
-badListCM6So = {
+badListCM6So = { };
+a = {
     'CAS.FGOALS-f3-L.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191007' ; % rotated pole
     'CAS.FGOALS-f3-L.r2i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
     'CAS.FGOALS-f3-L.r3i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
@@ -239,7 +240,8 @@ badListCM6So = {
     'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218' ; % Problem > 1000 m - missing value/coord issue?
     'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
     };
-badListCM6Thetao = {
+badListCM6Thetao = { };
+b = {
     'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191007' ; % rotated pole
     'CAS.FGOALS-f3-L.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
     'CAS.FGOALS-f3-L.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
@@ -277,7 +279,8 @@ badListCM6Thetao = {
     'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218'
     'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
 };
-badListCM5So = {
+badListCM5So = { };
+c = {
     'ICHEC.EC-EARTH.r10i1p1.mon.so.ocean.glb-z1-gu.1' ; % mask
     'ICHEC.EC-EARTH.r11i1p1.mon.so.ocean.glb-z1-gu.v20120403'
     'ICHEC.EC-EARTH.r12i1p1.mon.so.ocean.glb-z1-gu.1'
@@ -303,7 +306,8 @@ badListCM5So = {
     'MRI.MRI-CGCM3.r4i1p2.mon.so.ocean.glb-z1-gu.v20120510'
     'MRI.MRI-CGCM3.r5i1p2.mon.so.ocean.glb-z1-gu.v20120510'
     };
-badListCM5Thetao = {
+badListCM5Thetao = { };
+d = {
     'ICHEC.EC-EARTH.r10i1p1.mon.thetao.ocean.glb-l-gu.1' ; % mask
     'ICHEC.EC-EARTH.r11i1p1.mon.thetao.ocean.glb-l-gu.v20120403'
     'ICHEC.EC-EARTH.r12i1p1.mon.thetao.ocean.glb-l-gu.1'
@@ -636,7 +640,7 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
 disp('** All data written to *.mat.. **')
 
 %% Or load WOA18 and CMIP5/6 ensemble matrices from saved file
-load 210203_CMIP5And6andWOA18_thetaoAndso.mat
+%load 210203_CMIP5And6andWOA18_thetaoAndso.mat
 
 %% Figure 3.23 global - thetao and so clim vs WOA18
 close all
