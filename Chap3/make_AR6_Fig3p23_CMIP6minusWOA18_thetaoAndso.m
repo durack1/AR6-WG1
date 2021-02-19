@@ -193,8 +193,7 @@ clear ax1 ax2 hh1
 disp('** WOA18 processing complete.. **')
 
 %% Declare bad lists
-badListCM6So = { };
-a = {
+badListCM6So = {
     'CAS.FGOALS-f3-L.r1i1p1f1.mon.so.ocean.glb-l-gn.v20191007' ; % rotated pole
     'CAS.FGOALS-f3-L.r2i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
     'CAS.FGOALS-f3-L.r3i1p1f1.mon.so.ocean.glb-l-gn.v20191008'
@@ -241,8 +240,7 @@ a = {
     'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218' ; % Problem > 1000 m - missing value/coord issue?
     'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
     };
-badListCM6Thetao = { };
-b = {
+badListCM6Thetao = {
     'CAS.FGOALS-f3-L.r1i1p1f1.mon.thetao.ocean.glb-l-gn.v20191007' ; % rotated pole
     'CAS.FGOALS-f3-L.r2i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
     'CAS.FGOALS-f3-L.r3i1p1f1.mon.thetao.ocean.glb-l-gn.v20191008'
@@ -280,18 +278,17 @@ b = {
     'NCC.NorESM2-MM.r2i1p1f1.mon.so.ocean.glb-l-gn.v20200218'
     'NCC.NorESM2-MM.r3i1p1f1.mon.so.ocean.glb-l-gn.v20200702'
 };
-badListCM5So = { };
-c = {
-    'ICHEC.EC-EARTH.r10i1p1.mon.so.ocean.glb-z1-gu.1' ; % mask
-    'ICHEC.EC-EARTH.r11i1p1.mon.so.ocean.glb-z1-gu.v20120403'
-    'ICHEC.EC-EARTH.r12i1p1.mon.so.ocean.glb-z1-gu.1'
-    'ICHEC.EC-EARTH.r14i1p1.mon.so.ocean.glb-z1-gu.1'
-    'ICHEC.EC-EARTH.r2i1p1.mon.so.ocean.glb-z1-gu.1'
+badListCM5So = {
+    'ICHEC.EC-EARTH.r2i1p1.mon.so.ocean.glb-z1-gu.1' ; % mask
     'ICHEC.EC-EARTH.r3i1p1.mon.so.ocean.glb-z1-gu.1'
     'ICHEC.EC-EARTH.r5i1p1.mon.so.ocean.glb-z1-gu.1'
     'ICHEC.EC-EARTH.r6i1p1.mon.so.ocean.glb-z1-gu.1'
     'ICHEC.EC-EARTH.r7i1p1.mon.so.ocean.glb-z1-gu.1'
     'ICHEC.EC-EARTH.r9i1p1.mon.so.ocean.glb-z1-gu.1'
+    'ICHEC.EC-EARTH.r10i1p1.mon.so.ocean.glb-z1-gu.1'
+    'ICHEC.EC-EARTH.r11i1p1.mon.so.ocean.glb-z1-gu.v20120403'
+    'ICHEC.EC-EARTH.r12i1p1.mon.so.ocean.glb-z1-gu.1'
+    'ICHEC.EC-EARTH.r14i1p1.mon.so.ocean.glb-z1-gu.1'
     'INM.inmcm4.r1i1p1.mon.so.ocean.glb-z1-gu.1' ; % weird values through depth
     'MIROC.MIROC4h.r1i1p1.mon.so.ocean.glb-z1-gu.1' ; % weird values through depth
     'MIROC.MIROC4h.r2i1p1.mon.so.ocean.glb-z1-gu.1'
@@ -307,18 +304,17 @@ c = {
     'MRI.MRI-CGCM3.r4i1p2.mon.so.ocean.glb-z1-gu.v20120510'
     'MRI.MRI-CGCM3.r5i1p2.mon.so.ocean.glb-z1-gu.v20120510'
     };
-badListCM5Thetao = { };
-d = {
-    'ICHEC.EC-EARTH.r10i1p1.mon.thetao.ocean.glb-l-gu.1' ; % mask
-    'ICHEC.EC-EARTH.r11i1p1.mon.thetao.ocean.glb-l-gu.v20120403'
-    'ICHEC.EC-EARTH.r12i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r14i1p1.mon.thetao.ocean.glb-l-gu.1'
-    'ICHEC.EC-EARTH.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
+badListCM5Thetao = {
+    'ICHEC.EC-EARTH.r2i1p1.mon.thetao.ocean.glb-l-gu.1' ; % mask
     'ICHEC.EC-EARTH.r3i1p1.mon.thetao.ocean.glb-l-gu.1'
     'ICHEC.EC-EARTH.r5i1p1.mon.thetao.ocean.glb-l-gu.1'
     'ICHEC.EC-EARTH.r6i1p1.mon.thetao.ocean.glb-l-gu.1'
     'ICHEC.EC-EARTH.r7i1p1.mon.thetao.ocean.glb-l-gu.1'
     'ICHEC.EC-EARTH.r9i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r10i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r11i1p1.mon.thetao.ocean.glb-l-gu.v20120403'
+    'ICHEC.EC-EARTH.r12i1p1.mon.thetao.ocean.glb-l-gu.1'
+    'ICHEC.EC-EARTH.r14i1p1.mon.thetao.ocean.glb-l-gu.1'
     'INM.inmcm4.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
     'MIROC.MIROC4h.r1i1p1.mon.thetao.ocean.glb-l-gu.1' ; % weird values through depth
     'MIROC.MIROC4h.r2i1p1.mon.thetao.ocean.glb-l-gu.1'
@@ -345,6 +341,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             badList = badListCM5Thetao;
             outData = os_path([outDir,'ncs/',dataDate,'/CMIP5/historical-1980-2006/woaGrid/']);
             mipEra = 'cmip5';
+            cmip5TimePeriod = '1980-2005';
             cont1 = ptcont1;
             cont2 = ptcont2;
             cont3 = ptcont3;
@@ -375,6 +372,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             badList = badListCM6So;
             outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical-1980-2011/woaGrid/']);
             mipEra = 'cmip6';
+            cmip6TimePeriod = '1980-2010';
             cont1 = scont1;
             cont2 = scont2;
             cont3 = scont3;
@@ -546,7 +544,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
     end
     % Trim excess values
     varTmp((count+1):end,:,:,:) = [];
-    varTmp_model_names((count+1):end) = [];
+    %varTmp_model_names((count+1):end) = [];
     clear count ens_count ensemble in_path infile model* unit_test x
 
     % Cludgey fix for bad data
@@ -638,7 +636,8 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
                                                                      'so_cmip5','thetao_cmip5', ...
                                                                      'so_cmip5_mean','thetao_cmip5_mean', ...
                                                                      'so_cmip5_mean_zonal','thetao_cmip5_mean_zonal', ...
-                                                                     't_depth','t_lat','t_lon');
+                                                                     't_depth','t_lat','t_lon', ...
+                                                                     'cmip6TimePeriod','cmip5TimePeriod');
 disp('** All data written to *.mat.. **')
 
 %% Or load WOA18 and CMIP5/6 ensemble matrices from saved file
@@ -1012,14 +1011,14 @@ for mipEra = 1:2
     end
     if mipEra == 1
         cmipStr = {'CMIP5', ...
-                   'historical', ...
-                  ['thetao: n=',num2str(length(thetao_cmip5_modelNames))], ...
-                  ['so: n=',num2str(length(so_cmip5_modelNames))]};
+                   ['historical ',cmip5timePeriod], ...
+                   ['thetao: n=',num2str(length(thetao_cmip5_modelNames))], ...
+                   ['so: n=',num2str(length(so_cmip5_modelNames))]};
     else
         cmipStr = {'CMIP6', ...
-                   'historical', ...
-                  ['thetao: n=',num2str(length(thetao_cmip6_modelNames))], ...
-                  ['so: n=',num2str(length(so_cmip6_modelNames))]};
+                   ['historical ',cmip6timePeriod], ...
+                   ['thetao: n=',num2str(length(thetao_cmip6_modelNames))], ...
+                   ['so: n=',num2str(length(so_cmip6_modelNames))]};
     end
     %disp(['cmip:',cmipStr])
     yax = yax+500;
