@@ -38,6 +38,7 @@
 % PJD  7 Feb 2021   - Updated to use 1981-2010 WOA18 climatology as baseline
 % PJD 18 Feb 2021   - Updated to use 210217 runs, with complete file set (same count at 210130)
 % PJD 18 Feb 2021   - Updated outData to reflect new exp-startYr-endYr format
+% PJD 19 Feb 2021   - Updated to use cmipXTimePeriod text in plots
 %                   - TODO: CMIP5 reported 41 so 43 thetao models, now have 33/34 figure out what is missing
 %                   - TODO: First plot greyed for each box, then overplot colours and contours (greyed bathymetry underlaid)
 %                   - TODO: Add more models (total count 120720 is 45 for CMIP5), deal with sigma-level models
@@ -362,6 +363,7 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             badList = badListCM6Thetao;
             outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical-1980-2011/woaGrid/']);
             mipEra = 'cmip6';
+            cmip6TimePeriod = '1980-2010';
             cont1 = ptcont1;
             cont2 = ptcont2;
             cont3 = ptcont3;
@@ -372,7 +374,6 @@ for mipVar = 1:4 % Cycle through all mip_eras and variables
             badList = badListCM6So;
             outData = os_path([outDir,'ncs/',dataDate,'/CMIP6/historical-1980-2011/woaGrid/']);
             mipEra = 'cmip6';
-            cmip6TimePeriod = '1980-2010';
             cont1 = scont1;
             cont2 = scont2;
             cont3 = scont3;
@@ -641,7 +642,7 @@ save([outDir,datestr(now,'yymmdd'),'_CMIP5And6andWOA18_thetaoAndso.mat'],'so_woa
 disp('** All data written to *.mat.. **')
 
 %% Or load WOA18 and CMIP5/6 ensemble matrices from saved file
-%load 210203_CMIP5And6andWOA18_thetaoAndso.mat
+%load 210219_CMIP5And6andWOA18_thetaoAndso.mat
 
 %% Figure 3.23 global - thetao and so clim vs WOA18
 close all
@@ -1011,12 +1012,12 @@ for mipEra = 1:2
     end
     if mipEra == 1
         cmipStr = {'CMIP5', ...
-                   ['historical ',cmip5timePeriod], ...
+                   ['historical ',cmip5TimePeriod], ...
                    ['thetao: n=',num2str(length(thetao_cmip5_modelNames))], ...
                    ['so: n=',num2str(length(so_cmip5_modelNames))]};
     else
         cmipStr = {'CMIP6', ...
-                   ['historical ',cmip6timePeriod], ...
+                   ['historical ',cmip6TimePeriod], ...
                    ['thetao: n=',num2str(length(thetao_cmip6_modelNames))], ...
                    ['so: n=',num2str(length(so_cmip6_modelNames))]};
     end
@@ -1057,3 +1058,14 @@ for mipEra = 1:2
     close all %set(gcf,'visi','on');
     clear ax* c h handle hh* xlab* ylab* mipEra
 end %for mipEra
+
+%% Terminate Matlab session if batch job
+clear; close all
+[command] = matlab_mode;
+disp(command)
+if contains(command,'-batch') % If batch job exit
+    disp('MATLAB: batch job determined, exiting..')
+    exit
+else
+    disp('MATLAB: interactive mode determined.. Doing nothing particular..')
+end
