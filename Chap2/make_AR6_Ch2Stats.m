@@ -10,6 +10,7 @@ function make_AR6_Ch2Stats(infile,writeFiles)
 %                       ~work/Shared/200428_data_OceanObsAnalysis/
 %                       DurackandWijffels_GlobalOceanChanges_19500101-20191231__210122-205355_beta.nc
 % PJD 23 Feb 2021   - Further updates including pattern amplification (PA) calculation
+%                   - TODO: Add EN4, Ishii17 to analysis
 
 % make_AR6_Ch2Stats.m
 
