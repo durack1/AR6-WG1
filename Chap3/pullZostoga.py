@@ -10,11 +10,14 @@ This script pulls and pools zostoga output for Ch3
 PJD 16 Dec 2020 - Finalized with zip archive
 PJD  5 Feb 2021 - Updated to remove existing archive if it exists
 PJD  5 Feb 2021 - Add tmp file migration to persistent workDir
+PJD 29 Mar 2021 - Add logs so directory version numbers are preserved
 
 @author: durack1
 """
 import datetime, glob, os, pdb, re
 from shutil import copytree, make_archive, move, rmtree
+os.sys.path.insert(0,'/export/durack1/git/durolib/durolib')
+from durolib import writeToLog #,trimModelList
 
 #%% Setup inputs
 exps = {}
@@ -80,9 +83,19 @@ os.makedirs(targetDirComp)
 os.chdir(targetDirComp)
 print('os.getcwd():', os.getcwd())
 
+# Create log
+timeNow = datetime.datetime.now();
+timeFormat = timeNow.strftime("%y%m%dT%H%M%S")
+dateNow = timeNow.strftime('%y%m%d')
+#dateNow = '210226'
+logFile = os.path.join(targetDirComp,'_'.join([timeFormat,'AR6WG1-Ch3-CMIP6-zostoga_log.txt']))
+textToWrite = ' '.join(['TIME:',timeFormat])
+writeToLog(logFile,textToWrite)
+
 # Loop through directories and copy paths and data
 for count, filepath in enumerate(filePathsKeep):
     print(count, filepath)
+    writeToLog("{:03d}".format(count), filepath)
     dest = filepath.split('/')
     dest = dest[4:]
     dest = os.path.join(*dest)
