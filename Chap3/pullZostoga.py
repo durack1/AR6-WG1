@@ -14,7 +14,7 @@ PJD 29 Mar 2021 - Add logs so directory version numbers are preserved
 
 @author: durack1
 """
-import datetime, glob, os, pdb, re
+import datetime, glob, os, pdb, re, zipfile
 from shutil import copytree, make_archive, move, rmtree
 os.sys.path.insert(0,'/export/durack1/git/durolib/durolib')
 from durolib import writeToLog #,trimModelList
@@ -95,12 +95,18 @@ writeToLog(logFile,textToWrite)
 # Loop through directories and copy paths and data
 for count, filepath in enumerate(filePathsKeep):
     print(count, filepath)
-    writeToLog("{:03d}".format(count), filepath)
+    filePathTrim = filepath.split('/')[4:]
+    filePathTrim = os.path.join(*filePathTrim)
+    print('filePathTrim: ',filePathTrim)
+    writeToLog(logFile,' '.join(["{:03d}".format(count), filePathTrim]))
     dest = filepath.split('/')
     dest = dest[4:]
     dest = os.path.join(*dest)
     copytree(filepath, dest)
     print('copytree(', filepath, dest,')')
+
+#%% Append log file
+os.rename(logFile,logFile.replace(targetDirComp,os.path.join(targetDirComp,'CMIP6')))
 
 #%% Zip up for distribution
 zipFile = '_'.join([timeFormat, 'CMIP6-CMIP-DAMIP-zostoga'])
@@ -109,11 +115,12 @@ zipFileExt = '.'.join([zipFilePath,'zip'])
 if os.path.exists(zipFileExt):
     os.remove(zipFileExt)
 print('zipFile:', zipFilePath)
-make_archive(zipFilePath, 'zip', '.', '.')
+os.chdir('..') ; # jump one dir up, so not to self-reference zip archive
+#make_archive(zipFilePath, 'zip', '.', '.')
+make_archive(zipFilePath, 'zip', targetDirComp, 'CMIP6')
 
 #%% Move to Chap3 directory
 workDir = '/work/durack1/Shared/190311_AR6/Chap3'
-pdb.set_trace()
 zipFileExtMoved = os.path.join(workDir,'.'.join([zipFile,'zip']))
 print('zipFileExtMoved:',zipFileExtMoved)
 move(zipFileExt,zipFileExtMoved)
